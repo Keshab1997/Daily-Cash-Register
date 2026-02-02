@@ -1,26 +1,69 @@
-.filter-area { margin-bottom: 20px; }
-.history-container { display: flex; flex-direction: column; gap: 15px; padding-bottom: 20px; }
+.nav-actions { display: flex; gap: 10px; }
+.btn-icon { width: 40px; height: 40px; border-radius: 50%; padding: 0; font-size: 1.2rem; color: white; }
+.btn-pdf { background: #ef4444; }
+.btn-share { background: #25D366; }
 
-.history-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.2s; position: relative; }
-.history-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--primary); }
+.filter-wrapper {
+    background: #f9fafb;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
 
-.h-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px; }
-.h-date { font-weight: 600; color: var(--text-main); }
-.h-badge { font-size: 0.8rem; padding: 3px 8px; border-radius: 20px; font-weight: bold; }
-.badge-pos { background: #d1fae5; color: #065f46; }
-.badge-neg { background: #fee2e2; color: #991b1b; }
+.date-range { display: flex; align-items: center; gap: 10px; }
+.date-range input { flex: 1; }
+.to-text { font-weight: 600; color: var(--text-light); }
 
-.h-body { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-light); }
-.h-val { font-weight: 600; color: var(--text-main); }
+.search-filters { display: flex; gap: 10px; }
+.search-filters select { flex: 1; cursor: pointer; }
+.search-box { flex: 2; position: relative; }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-light); }
+.search-box input { padding-left: 35px; }
 
-.modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
-.modal-content { background-color: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto; animation: slideUp 0.3s; }
-.close-modal { float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa; }
-.close-modal:hover { color: black; }
+@media (max-width: 600px) {
+    .search-filters { flex-direction: column; }
+}
 
-.modal-body h4 { margin: 15px 0 5px 0; font-size: 0.9rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; }
-.detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 0.95rem; }
-.detail-party { font-weight: 500; }
+.mini-summary {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 15px;
+    background: #eff6ff;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    color: var(--primary-dark);
+}
 
-@keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.loading { text-align: center; padding: 20px; color: #888; }
+.table-container {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: white;
+}
+
+table { width: 100%; border-collapse: collapse; min-width: 600px; }
+th { background: #f3f4f6; text-align: left; padding: 12px 15px; font-weight: 600; color: var(--text-light); font-size: 0.9rem; }
+td { padding: 12px 15px; border-bottom: 1px solid var(--border); color: var(--text-main); font-size: 0.95rem; }
+tr:last-child td { border-bottom: none; }
+
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; width: 80px; text-align: center; }
+.badge-in { background: #d1fae5; color: #065f46; }
+.badge-out { background: #fee2e2; color: #991b1b; }
+
+.amount-cell { font-family: 'Courier New', monospace; font-weight: 600; }
+.t-green { color: var(--success); }
+.t-red { color: var(--danger); }
+
+.no-data { text-align: center; padding: 30px; color: var(--text-light); display: none; }
+
+@media (max-width: 600px) {
+    thead { display: none; }
+    tr { display: block; border: 1px solid var(--border); margin-bottom: 10px; border-radius: 8px; padding: 10px; background: white; }
+    td { display: flex; justify-content: space-between; padding: 5px 0; border: none; }
+    td::before { content: attr(data-label); font-weight: 600; color: var(--text-light); font-size: 0.85rem; }
+}

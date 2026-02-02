@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History</title>
+    <title>History - Hisab</title>
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/history.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 <body>
@@ -15,28 +17,62 @@
         <div class="navbar">
             <div class="brand">
                 <a href="dashboard.html" class="back-btn"><i class="ri-arrow-left-line"></i></a>
-                <h2>Records</h2>
+                <h2>Transaction History</h2>
+            </div>
+            <div class="nav-actions">
+                <button class="btn-icon btn-pdf" onclick="downloadPDF()" title="Download PDF">
+                    <i class="ri-file-pdf-line"></i>
+                </button>
+                <button class="btn-icon btn-share" onclick="shareHistory()" title="Share List">
+                    <i class="ri-whatsapp-line"></i>
+                </button>
             </div>
         </div>
 
-        <div class="filter-area">
-            <input type="month" id="monthPicker" onchange="loadHistory()">
-        </div>
+        <div class="filter-wrapper">
+            <div class="date-range">
+                <input type="date" id="startDate" onchange="fetchHistory()">
+                <span class="to-text">to</span>
+                <input type="date" id="endDate" onchange="fetchHistory()">
+            </div>
+            
+            <div class="search-filters">
+                <select id="typeFilter" onchange="applyFilters()">
+                    <option value="ALL">All Types (In & Out)</option>
+                    <option value="IN">🟢 Received Only</option>
+                    <option value="OUT">🔴 Paid Only</option>
+                </select>
 
-        <div id="historyList" class="history-container">
-            <div class="loading">Loading records...</div>
-        </div>
-    </div>
-
-    <div id="detailModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
-            <h3 id="modalDate">Details</h3>
-            <div class="modal-body">
-                <div id="modalInList"></div>
-                <div id="modalOutList"></div>
+                <div class="search-box">
+                    <i class="ri-search-line search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search Name..." list="nameSuggestions" oninput="applyFilters()">
+                    <datalist id="nameSuggestions"></datalist>
+                </div>
             </div>
         </div>
+
+        <div class="mini-summary">
+            <span>Found: <b id="countRow">0</b></span>
+            <span>Total: <b id="totalAmount">₹0.00</b></span>
+        </div>
+
+        <div class="table-container">
+            <table id="historyTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Name / Description</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="noData" class="no-data">No records found matching your filters.</div>
     </div>
 
     <script src="js/config.js"></script>

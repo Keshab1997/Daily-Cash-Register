@@ -15,18 +15,21 @@
         <div class="navbar">
             <div class="brand">
                 <i class="ri-wallet-3-line"></i>
-                <h2>Hisab Premium</h2>
+                <h2>Hisab Manager</h2>
             </div>
             <div class="nav-links">
-                <a href="history.html"><i class="ri-file-list-3-line"></i></a>
-                <a href="profile.html"><i class="ri-user-3-line"></i></a>
+                <a href="history.html" title="History"><i class="ri-file-list-3-line"></i></a>
+                <a href="profile.html" title="Profile"><i class="ri-user-3-line"></i></a>
             </div>
         </div>
 
         <div class="top-controls">
-            <input type="date" id="date" class="date-picker">
-            <div class="opening-box">
-                <small>Opening Balance</small>
+            <div class="date-group">
+                <label class="label-text">Select Date</label>
+                <input type="date" id="date">
+            </div>
+            <div class="opening-group">
+                <label class="label-text">Opening Balance</label>
                 <input type="number" id="opening" value="0" oninput="updateSummary()">
             </div>
         </div>
@@ -34,10 +37,11 @@
         <div class="entry-grid">
             <div class="card card-in">
                 <div class="card-header">
-                    <i class="ri-arrow-down-circle-fill"></i> Cash IN (+)
+                    <span class="text-green">Cash Received (IN)</span>
+                    <i class="ri-arrow-down-circle-line text-green"></i>
                 </div>
                 <div class="input-group">
-                    <input type="text" id="inName" placeholder="From (Name)" list="nameSuggestions">
+                    <input type="text" id="inName" placeholder="Payer Name" list="nameSuggestions">
                     <input type="number" id="inAmount" placeholder="Amount">
                     <button class="btn-add-in" onclick="addTransaction('IN')"><i class="ri-add-line"></i></button>
                 </div>
@@ -46,10 +50,11 @@
 
             <div class="card card-out">
                 <div class="card-header">
-                    <i class="ri-arrow-up-circle-fill"></i> Cash OUT (-)
+                    <span class="text-red">Cash Payment (OUT)</span>
+                    <i class="ri-arrow-up-circle-line text-red"></i>
                 </div>
                 <div class="input-group">
-                    <input type="text" id="outName" placeholder="To (Name/Exp)" list="nameSuggestions">
+                    <input type="text" id="outName" placeholder="Receiver / Expense" list="nameSuggestions">
                     <input type="number" id="outAmount" placeholder="Amount">
                     <button class="btn-add-out" onclick="addTransaction('OUT')"><i class="ri-add-line"></i></button>
                 </div>
@@ -60,22 +65,23 @@
         <datalist id="nameSuggestions"></datalist>
 
         <div class="summary-box">
-            <div class="sum-row">
-                <span>Total In:</span> <span id="sumIn" class="text-green">0</span>
+            <div class="sum-item">
+                <small>Total Received</small>
+                <span id="sumIn" class="text-green">₹0.00</span>
             </div>
-            <div class="sum-row">
-                <span>Total Out:</span> <span id="sumOut" class="text-red">0</span>
+            <div class="sum-item">
+                <small>Total Paid</small>
+                <span id="sumOut" class="text-red">₹0.00</span>
             </div>
-            <div class="divider"></div>
-            <div class="sum-total">
+            <div class="sum-item">
                 <small>Closing Balance</small>
-                <h1 id="finalBalance">0</h1>
+                <span id="finalBalance" class="final-bal">₹0.00</span>
             </div>
         </div>
 
         <div class="action-buttons">
-            <button class="btn-whatsapp" onclick="shareWhatsApp()"><i class="ri-whatsapp-line"></i> Share</button>
-            <button class="btn-save" onclick="saveDayEnd()"><i class="ri-save-3-line"></i> Day End Save</button>
+            <button class="btn-whatsapp" onclick="shareWhatsApp()"><i class="ri-whatsapp-line"></i> Share Report</button>
+            <button class="btn-save" onclick="saveDayEnd()"><i class="ri-save-3-line"></i> Save Day End</button>
         </div>
     </div>
 

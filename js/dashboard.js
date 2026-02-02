@@ -1,5 +1,12 @@
 let currentUser = null;
-let transactions = [];
+let transactions = []; 
+
+const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR'
+    }).format(amount);
+};
 
 window.onload = async () => {
     const session = await checkAuth(true);
@@ -14,7 +21,7 @@ window.onload = async () => {
         fetchOpeningBalance();
         loadTodayTransactions();
     });
-
+    
     await fetchOpeningBalance();
     await loadTodayTransactions();
     await loadSuggestions();
@@ -28,42 +35,33 @@ async function fetchOpeningBalance() {
         .order('report_date', { ascending: false })
         .limit(1);
         
-    if(data && data.length > 0) {
-        document.getElementById('opening').value = data[0].petty_cash;
-    } else {
-        document.getElementById('opening').value = 0;
-    }
+    document.getElementById('opening').value = (data && data.length > 0) ? data[0].petty_cash : 0;
     updateSummary();
 }
 
 async function loadTodayTransactions() {
     const date = document.getElementById('date').value;
-
     const { data, error } = await _supabase.from('transactions')
         .select('*')
         .eq('user_id', currentUser.id)
         .eq('t_date', date)
         .order('created_at', { ascending: true });
 
-    if (error) {
-        console.error("Error loading transactions:", error);
-        return;
+    if (!error) {
+        transactions = data || [];
+        renderList();
+        updateSummary();
     }
-
-    transactions = data || [];
-    renderList();
-    updateSummary();
 }
 
 async function loadSuggestions() {
     const { data } = await _supabase.from('transactions')
         .select('party_name')
         .eq('user_id', currentUser.id);
-
+    
     if(data) {
         const uniqueNames = [...new Set(data.map(item => item.party_name))];
-        const datalist = document.getElementById('nameSuggestions');
-        datalist.innerHTML = uniqueNames.map(name => `<option value="${name}">`).join('');
+        document.getElementById('nameSuggestions').innerHTML = uniqueNames.map(name => `<option value="${name}">`).join('');
     }
 }
 
@@ -71,7 +69,7 @@ async function addTransaction(type) {
     const nameId = type === 'IN' ? 'inName' : 'outName';
     const amountId = type === 'IN' ? 'inAmount' : 'outAmount';
     const btnClass = type === 'IN' ? '.btn-add-in' : '.btn-add-out';
-
+    
     const nameInput = document.getElementById(nameId);
     const amountInput = document.getElementById(amountId);
     const btn = document.querySelector(btnClass);
@@ -80,13 +78,13 @@ async function addTransaction(type) {
     const amount = parseFloat(amountInput.value);
 
     if (!name || !amount || amount <= 0) {
-        alert("সঠিক নাম এবং টাকার পরিমাণ দিন।");
+        alert("Please enter valid Name and Amount");
         return;
     }
 
-    const originalBtnText = btn.innerHTML;
-    btn.innerHTML = '<i class="ri-loader-4-line"></i>';
     btn.disabled = true;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="ri-loader-4-line"></i>';
 
     const payload = {
         user_id: currentUser.id,
@@ -96,26 +94,24 @@ async function addTransaction(type) {
         amount: amount
     };
 
-    const { data, error } = await _supabase.from('transactions').insert(payload).select();
+    const { error } = await _supabase.from('transactions').insert(payload);
 
     if (error) {
-        alert("সেভ করা যায়নি: " + error.message);
+        alert("Error: " + error.message);
     } else {
         nameInput.value = '';
         amountInput.value = '';
         nameInput.focus();
-        
         await loadTodayTransactions();
     }
-
-    btn.innerHTML = originalBtnText;
     btn.disabled = false;
+    btn.innerHTML = originalHtml;
 }
 
 function renderList() {
     const listIn = document.getElementById('listIn');
     const listOut = document.getElementById('listOut');
-
+    
     listIn.innerHTML = '';
     listOut.innerHTML = '';
 
@@ -123,9 +119,9 @@ function renderList() {
         const li = `
             <li>
                 <span>${t.party_name}</span>
-                <div style="display:flex; align-items:center">
-                    <span>${t.amount}</span>
-                    <i class="ri-close-circle-line del-btn" onclick="removeTransaction(${t.id})"></i>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="amount-display">${formatCurrency(t.amount)}</span>
+                    <i class="ri-delete-bin-line del-btn" style="cursor:pointer; color:#ef4444;" onclick="removeTransaction(${t.id})"></i>
                 </div>
             </li>
         `;
@@ -135,40 +131,33 @@ function renderList() {
 }
 
 async function removeTransaction(id) {
-    if(!confirm("আপনি কি এটি মুছে ফেলতে চান?")) return;
-
-    const { error } = await _supabase.from('transactions')
-        .delete()
-        .eq('id', id);
-
-    if (error) {
-        alert("মুছে ফেলা যায়নি: " + error.message);
-    } else {
-        await loadTodayTransactions();
-    }
+    if(!confirm("Delete this transaction?")) return;
+    const { error } = await _supabase.from('transactions').delete().eq('id', id);
+    if (!error) await loadTodayTransactions();
 }
 
 function updateSummary() {
     const opening = parseFloat(document.getElementById('opening').value) || 0;
-
+    
     let totalIn = transactions.filter(t => t.t_type === 'IN').reduce((sum, t) => sum + t.amount, 0);
     let totalOut = transactions.filter(t => t.t_type === 'OUT').reduce((sum, t) => sum + t.amount, 0);
 
-    document.getElementById('sumIn').innerText = totalIn;
-    document.getElementById('sumOut').innerText = totalOut;
+    document.getElementById('sumIn').innerText = formatCurrency(totalIn);
+    document.getElementById('sumOut').innerText = formatCurrency(totalOut);
 
     const final = (opening + totalIn) - totalOut;
     const el = document.getElementById('finalBalance');
-    el.innerText = final;
+    el.innerText = formatCurrency(final);
     el.style.color = final >= 0 ? '#10b981' : '#ef4444';
 }
 
 async function saveDayEnd() {
     const date = document.getElementById('date').value;
     const opening = parseFloat(document.getElementById('opening').value) || 0;
-    const totalIn = parseFloat(document.getElementById('sumIn').innerText);
-    const totalOut = parseFloat(document.getElementById('sumOut').innerText);
-    const final = parseFloat(document.getElementById('finalBalance').innerText);
+    
+    let totalIn = transactions.filter(t => t.t_type === 'IN').reduce((sum, t) => sum + t.amount, 0);
+    let totalOut = transactions.filter(t => t.t_type === 'OUT').reduce((sum, t) => sum + t.amount, 0);
+    const final = (opening + totalIn) - totalOut;
 
     const summaryPayload = {
         user_id: currentUser.id,
@@ -183,29 +172,30 @@ async function saveDayEnd() {
         .upsert(summaryPayload, { onConflict: 'user_id, report_date' });
 
     if(error) alert('Error: ' + error.message);
-    else alert('✅ আজকের হিসাব সফলভাবে সেভ হয়েছে!');
+    else alert('✅ Day End Saved Successfully!');
 }
 
 function shareWhatsApp() {
     const date = document.getElementById('date').value;
-    const opening = document.getElementById('opening').value;
+    const opening = formatCurrency(document.getElementById('opening').value);
     const final = document.getElementById('finalBalance').innerText;
-
-    let msg = `*📅 Daily Hisab Report (${date})*\n\n`;
-    msg += `🔹 Opening: ${opening}\n`;
-
-    msg += `\n*📥 Money IN:*\n`;
+    
+    let msg = `*📅 Daily Report (${date})*\n`;
+    msg += `----------------------------\n`;
+    msg += `🔹 Opening: ${opening}\n\n`;
+    
+    msg += `*📥 RECEIVED:*\n`;
     transactions.filter(t => t.t_type === 'IN').forEach(t => {
-        msg += `• ${t.party_name}: ${t.amount}\n`;
+        msg += `• ${t.party_name}: ${formatCurrency(t.amount)}\n`;
     });
-
-    msg += `\n*📤 Money OUT:*\n`;
+    
+    msg += `\n*📤 PAID:*\n`;
     transactions.filter(t => t.t_type === 'OUT').forEach(t => {
-        msg += `• ${t.party_name}: ${t.amount}\n`;
+        msg += `• ${t.party_name}: ${formatCurrency(t.amount)}\n`;
     });
 
-    msg += `\n------------------\n`;
-    msg += `*💰 Closing Balance: ${final}*`;
+    msg += `\n----------------------------\n`;
+    msg += `*💰 Closing: ${final}*`;
 
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 }
