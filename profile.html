@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile</title>
-    
+    <title>Profile - Hisab Manager</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563eb">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2331/2331966.png">
@@ -12,59 +11,88 @@
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/profile.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
+        <!-- Standard Navbar -->
         <div class="navbar">
-            <div class="brand">
-                <a href="dashboard.html" class="back-btn"><i class="ri-arrow-left-line"></i></a>
-                <h2>Profile</h2>
-            </div>
-            <div style="display:flex; gap:15px;">
-                <a href="box.html" style="font-size:1.4rem; color:#6b7280;"><i class="ri-archive-drawer-line"></i></a>
+            <a href="dashboard.html" class="brand">
+                <i class="ri-user-3-line"></i>
+                <h2>My Profile</h2>
+            </a>
+            <div class="nav-links">
+                <a href="dashboard.html" title="Home"><i class="ri-home-4-line"></i></a>
+                <a href="box.html" title="Secret Box"><i class="ri-archive-drawer-line"></i></a>
+                <a href="history.html" title="History"><i class="ri-file-list-3-line"></i></a>
+                <a href="profile.html" class="active" title="Profile"><i class="ri-user-3-line"></i></a>
             </div>
         </div>
 
-        <div class="profile-card">
-            <div class="avatar">
-                <i class="ri-user-smile-line"></i>
-            </div>
-            <h3 id="userEmail" class="user-email">Loading...</h3>
-            <p class="user-role">Manager</p>
-            
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <span id="totalDays">0</span>
-                    <small>Days Active</small>
-                </div>
-                <div class="stat-box">
-                    <span id="lastBalance">0</span>
-                    <small>Current Cash</small>
+        <div class="profile-wrapper">
+            <!-- Profile Header Card -->
+            <div class="profile-header">
+                <div class="profile-cover"></div>
+                <div class="profile-info">
+                    <div class="avatar-wrapper">
+                        <lottie-player 
+                            src="https://assets3.lottiefiles.com/packages/lf20_ba013t7v.json" 
+                            background="transparent" speed="1" loop autoplay>
+                        </lottie-player>
+                    </div>
+                    <h2 id="userEmail">Loading...</h2>
+                    <span class="badge-manager">Account Manager</span>
                 </div>
             </div>
 
-            <button class="btn-logout" onclick="logout()">
-                <i class="ri-logout-box-r-line"></i> Logout
-            </button>
-        </div>
+            <!-- Stats Section -->
+            <div class="stats-container">
+                <div class="stat-item">
+                    <div class="stat-icon icon-blue">
+                        <i class="ri-calendar-check-line"></i>
+                    </div>
+                    <div class="stat-texts">
+                        <h3 id="totalDays">0</h3>
+                        <p>Days Active</p>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon icon-green">
+                        <i class="ri-wallet-3-line"></i>
+                    </div>
+                    <div class="stat-texts">
+                        <h3 id="lastBalance">₹0</h3>
+                        <p>Current Cash</p>
+                    </div>
+                </div>
+            </div>
 
-        <!-- Danger Zone for Data Reset -->
-        <div class="danger-zone">
-            <h4>⚠️ Danger Zone</h4>
-            <p>Once you delete your data, there is no going back. Please be certain.</p>
-            <button class="btn-reset" onclick="resetAccount()">
-                <i class="ri-delete-bin-7-line"></i> Delete All Data (Factory Reset)
-            </button>
+            <!-- Settings/Actions -->
+            <div class="profile-actions">
+                <button class="btn-action btn-logout" onclick="logout()">
+                    <i class="ri-logout-box-r-line"></i>
+                    <span>Logout from Account</span>
+                </button>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="danger-card">
+                <div class="danger-header">
+                    <i class="ri-error-warning-line"></i>
+                    <h4>Danger Zone</h4>
+                </div>
+                <p>Deleting your account will permanently erase all transactions and daily reports. This action cannot be undone.</p>
+                <button class="btn-reset-new" onclick="resetAccount()">
+                    <i class="ri-delete-bin-7-line"></i> Factory Reset (Delete All Data)
+                </button>
+            </div>
         </div>
     </div>
+
     <script src="js/config.js"></script>
     <script src="js/profile.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-    </script>
 </body>
 </html>

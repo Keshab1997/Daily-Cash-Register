@@ -21,18 +21,15 @@
 <body>
     <div class="container">
         <div class="navbar">
-            <div class="brand">
-                <a href="dashboard.html" class="back-btn"><i class="ri-arrow-left-line"></i></a>
-                <h2>Transaction History</h2>
-            </div>
-            <div class="nav-actions">
-                <a href="box.html" class="btn-icon" style="background:none; color:#6b7280; font-size:1.4rem; display:flex; align-items:center;"><i class="ri-archive-drawer-line"></i></a>
-                <button class="btn-icon btn-pdf" onclick="downloadPDF()" title="Download PDF">
-                    <i class="ri-file-pdf-line"></i>
-                </button>
-                <button class="btn-icon btn-share" onclick="shareHistory()" title="Share List">
-                    <i class="ri-whatsapp-line"></i>
-                </button>
+            <a href="dashboard.html" class="brand">
+                <i class="ri-file-list-3-line"></i>
+                <h2>History</h2>
+            </a>
+            <div class="nav-links">
+                <a href="dashboard.html" title="Home"><i class="ri-home-4-line"></i></a>
+                <a href="box.html" title="Secret Box"><i class="ri-archive-drawer-line"></i></a>
+                <a href="history.html" class="active" title="History"><i class="ri-file-list-3-line"></i></a>
+                <a href="profile.html" title="Profile"><i class="ri-user-3-line"></i></a>
             </div>
         </div>
 
@@ -65,9 +62,11 @@
                 <span>Found: <b id="countRow">0</b></span>
                 <span>Total: <b id="totalAmount">₹0.00</b></span>
             </div>
-            <button id="bulkDeleteBtn" class="btn-bulk-delete hidden" onclick="deleteSelected()">
-                <i class="ri-delete-bin-2-line"></i> Delete Selected (<span id="selCount">0</span>)
-            </button>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-icon btn-pdf" onclick="downloadPDF()" title="Download PDF"><i class="ri-file-pdf-line"></i></button>
+                <button class="btn-icon btn-share" onclick="shareHistory()" title="Share List"><i class="ri-whatsapp-line"></i></button>
+                <button id="bulkDeleteBtn" class="btn-bulk-delete hidden" onclick="deleteSelected()"><i class="ri-delete-bin-2-line"></i> (<span id="selCount">0</span>)</button>
+            </div>
         </div>
 
         <div class="table-container">
