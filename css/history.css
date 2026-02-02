@@ -1,0 +1,6 @@
+.table-wrapper { overflow-x: auto; margin-top: 15px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #eee; }
+th { background: #f9fafb; font-weight: 600; color: #374151; }
+.badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+.btn-pdf { background: #ef4444; color: white; margin-bottom: 15px; }

@@ -1,0 +1,5 @@
+.profile-card { text-align: center; padding: 20px; }
+.avatar { width: 80px; height: 80px; border-radius: 50%; background: #2563eb; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 2rem; margin-bottom: 15px; }
+.user-email { font-size: 1.1rem; color: #333; margin-bottom: 5px; }
+.user-role { color: #888; font-size: 0.9rem; margin-bottom: 30px; }
+.btn-logout { background: #374151; color: white; }

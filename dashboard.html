@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Navbar -->
+        <div class="navbar">
+            <h2>📝 Hisab</h2>
+            <div class="nav-links">
+                <a href="history.html">📜</a>
+                <a href="profile.html">👤</a>
+            </div>
+        </div>
+
+        <input type="date" id="date">
+
+        <div class="section-in">
+            <h4>Money IN (+)</h4>
+            <input type="number" id="opening" placeholder="Opening Balance" oninput="calculate()">
+            <input type="number" id="received" placeholder="Cash Received" oninput="calculate()">
+        </div>
+
+        <div class="section-out">
+            <h4>Money OUT (-)</h4>
+            <input type="number" id="client" placeholder="Given to Client" oninput="calculate()">
+            <input type="number" id="bill" placeholder="Expenses / Bill" oninput="calculate()">
+        </div>
+
+        <div class="balance-box">
+            <small>Petty Cash</small>
+            <h1 id="total">0</h1>
+        </div>
+
+        <button class="btn-whatsapp" onclick="share()">📲 WhatsApp Share</button>
+        <button class="btn-save" onclick="save()">💾 Save to Database</button>
+    </div>
+    <script src="js/config.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

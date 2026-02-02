@@ -1,0 +1,4 @@
+.navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+.navbar h2 { color: #2563eb; font-size: 1.2rem; }
+.nav-links a { text-decoration: none; font-size: 1.5rem; margin-left: 15px; color: #4b5563; }
+.nav-links a:hover { color: #2563eb; }
