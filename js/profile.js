@@ -5,6 +5,11 @@ window.onload = async () => {
     currentUser = session.user;
     document.getElementById('userEmail').innerText = currentUser.email;
 
+    // ইউজারের ছবি থাকলে তা লোড করা
+    if (currentUser.user_metadata && currentUser.user_metadata.avatar_url) {
+        document.getElementById('profileImg').src = currentUser.user_metadata.avatar_url;
+    }
+
     loadStats(currentUser.id);
 };
 
@@ -37,6 +42,48 @@ async function logout() {
     window.location.href = 'index.html';
 }
 
+// --- ছবি আপলোড করার ফাংশন ---
+async function uploadAvatar(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${currentUser.id}-${Math.random()}.${fileExt}`;
+    const filePath = fileName;
+
+    const imgEl = document.getElementById('profileImg');
+    const originalSrc = imgEl.src;
+    imgEl.src = "https://i.gifer.com/ZKZg.gif"; // লোডিং অ্যানিমেশন
+
+    try {
+        // ১. Supabase Storage-এ আপলোড
+        const { error: uploadError } = await _supabase.storage
+            .from('avatars')
+            .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        // ২. পাবলিক URL নেওয়া
+        const { data: { publicUrl } } = _supabase.storage
+            .from('avatars')
+            .getPublicUrl(filePath);
+
+        // ৩. ইউজারের মেটাডাটা আপডেট করা
+        const { error: updateError } = await _supabase.auth.updateUser({
+            data: { avatar_url: publicUrl }
+        });
+
+        if (updateError) throw updateError;
+
+        imgEl.src = publicUrl;
+        alert("✅ Profile picture updated!");
+
+    } catch (error) {
+        alert("Error: " + error.message);
+        imgEl.src = originalSrc;
+    }
+}
+
 // --- Factory Reset Logic (Fixed) ---
 async function resetAccount() {
     if (!currentUser) {
@@ -56,7 +103,7 @@ async function resetAccount() {
     const userInput = prompt("To confirm, please type 'DELETE':");
 
     if (userInput === "DELETE") {
-        const btn = document.querySelector('.btn-reset');
+        const btn = document.querySelector('.btn-reset-new');
         const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="ri-loader-4-line"></i> Deleting...';
         btn.disabled = true;

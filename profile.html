@@ -13,7 +13,6 @@
     <link rel="stylesheet" href="css/profile.css">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 <body>
@@ -37,12 +36,17 @@
             <div class="profile-header">
                 <div class="profile-cover"></div>
                 <div class="profile-info">
-                    <div class="avatar-wrapper">
-                        <lottie-player 
-                            src="https://assets3.lottiefiles.com/packages/lf20_ba013t7v.json" 
-                            background="transparent" speed="1" loop autoplay>
-                        </lottie-player>
+                    <!-- প্রোফাইল পিকচার সেকশন -->
+                    <div class="avatar-container">
+                        <div class="avatar-wrapper" onclick="document.getElementById('avatarInput').click()">
+                            <img id="profileImg" src="https://via.placeholder.com/150?text=User" alt="Profile">
+                            <div class="upload-overlay">
+                                <i class="ri-camera-switch-line"></i>
+                            </div>
+                        </div>
+                        <input type="file" id="avatarInput" hidden accept="image/*" onchange="uploadAvatar(this)">
                     </div>
+                    
                     <h2 id="userEmail">Loading...</h2>
                     <span class="badge-manager">Account Manager</span>
                 </div>
