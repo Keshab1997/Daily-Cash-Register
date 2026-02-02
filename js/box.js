@@ -28,31 +28,36 @@ async function loadAllData() {
 }
 
 async function calculateSystemBalance() {
-    const today = getISTDate();
-    
-    const { data: openData } = await _supabase.from('daily_accounts')
-        .select('petty_cash')
+    // ১. শেষ কবে "Save Day End" করা হয়েছিল সেই ডাটা নিচ্ছি
+    const { data: lastSavedDay } = await _supabase.from('daily_accounts')
+        .select('report_date, petty_cash')
         .eq('user_id', currentUser.id)
-        .lt('report_date', today)
         .order('report_date', { ascending: false })
         .limit(1);
-    
-    const opening = (openData && openData.length > 0) ? openData[0].petty_cash : 0;
 
-    const { data: transData } = await _supabase.from('transactions')
-        .select('amount, t_type')
-        .eq('user_id', currentUser.id)
-        .eq('t_date', today);
+    let baseBalance = 0;
+    let lastSavedDate = '1900-01-01';
 
-    let totalIn = 0;
-    let totalOut = 0;
-
-    if (transData) {
-        totalIn = transData.filter(t => t.t_type === 'IN').reduce((sum, t) => sum + t.amount, 0);
-        totalOut = transData.filter(t => t.t_type === 'OUT').reduce((sum, t) => sum + t.amount, 0);
+    if (lastSavedDay && lastSavedDay.length > 0) {
+        baseBalance = lastSavedDay[0].petty_cash;
+        lastSavedDate = lastSavedDay[0].report_date;
     }
 
-    return (opening + totalIn) - totalOut;
+    // ২. শেষ সেভ করা দিন থেকে আজ পর্যন্ত যত ট্রানজেকশন হয়েছে সবগুলোর যোগ-বিয়োগ
+    const { data: pendingTrans } = await _supabase.from('transactions')
+        .select('amount, t_type')
+        .eq('user_id', currentUser.id)
+        .gt('t_date', lastSavedDate);
+
+    let adjustment = 0;
+    if (pendingTrans) {
+        pendingTrans.forEach(t => {
+            if (t.t_type === 'IN') adjustment += t.amount;
+            else adjustment -= t.amount;
+        });
+    }
+
+    return baseBalance + adjustment;
 }
 
 async function fetchSecretData() {
@@ -112,8 +117,14 @@ function calculateCards() {
     });
 
     document.getElementById('dueBal').innerText = formatCurrency(totalDue);
+    
+    // ফিজিক্যাল ক্যাশ = স্মার্ট সিস্টেম ব্যালেন্স - সিক্রেট ডিউ
     const physicalCash = currentSystemBalance - totalDue;
-    document.getElementById('phyBal').innerText = formatCurrency(physicalCash);
+    const phyEl = document.getElementById('phyBal');
+    phyEl.innerText = formatCurrency(physicalCash);
+    
+    // যদি ক্যাশ নেগেটিভ হয় তবে লাল রঙ দেখাবে
+    phyEl.style.color = physicalCash >= 0 ? 'white' : '#ffcfcf';
 }
 
 function filterActivity() {

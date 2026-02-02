@@ -25,9 +25,9 @@ window.onload = async () => {
         dateInput.value = getISTDate();
     }
 
-    dateInput.addEventListener('change', () => {
-        fetchOpeningBalance();
-        loadTodayTransactions();
+    dateInput.addEventListener('change', async () => {
+        await fetchOpeningBalance();
+        await loadTodayTransactions();
     });
 
     setupKeyboardShortcuts();
@@ -91,14 +91,41 @@ function sendNotification(title, body) {
 }
 
 async function fetchOpeningBalance() {
-    const { data } = await _supabase.from('daily_accounts')
-        .select('petty_cash')
+    const selectedDate = document.getElementById('date').value;
+    
+    // ১. শেষ কবে "Save Day End" করা হয়েছিল সেই ডাটা নিচ্ছি
+    const { data: lastSavedDay } = await _supabase.from('daily_accounts')
+        .select('report_date, petty_cash')
         .eq('user_id', currentUser.id)
-        .lt('report_date', document.getElementById('date').value)
+        .lt('report_date', selectedDate)
         .order('report_date', { ascending: false })
         .limit(1);
-        
-    document.getElementById('opening').value = (data && data.length > 0) ? data[0].petty_cash : 0;
+
+    let baseBalance = 0;
+    let lastSavedDate = '1900-01-01'; // যদি কোনোদিন সেভ না করা হয়
+
+    if (lastSavedDay && lastSavedDay.length > 0) {
+        baseBalance = lastSavedDay[0].petty_cash;
+        lastSavedDate = lastSavedDay[0].report_date;
+    }
+
+    // ২. শেষ সেভ করা দিন থেকে আজ পর্যন্ত যত ট্রানজেকশন হয়েছে (যা সেভ করা হয়নি) সেগুলো ক্যালকুলেট করা
+    const { data: pendingTrans } = await _supabase.from('transactions')
+        .select('amount, t_type')
+        .eq('user_id', currentUser.id)
+        .gt('t_date', lastSavedDate)
+        .lt('t_date', selectedDate);
+
+    let adjustment = 0;
+    if (pendingTrans) {
+        pendingTrans.forEach(t => {
+            if (t.t_type === 'IN') adjustment += t.amount;
+            else adjustment -= t.amount;
+        });
+    }
+
+    const finalOpening = baseBalance + adjustment;
+    document.getElementById('opening').value = finalOpening;
     updateSummary();
 }
 
