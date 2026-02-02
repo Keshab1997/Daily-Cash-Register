@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 <body>
@@ -91,15 +92,28 @@
         </div>
 
         <div class="action-buttons">
-            <button class="btn-whatsapp" onclick="shareWhatsApp()"><i class="ri-whatsapp-line"></i> Share</button>
+            <button class="btn-whatsapp" onclick="shareWhatsApp()" title="Share Text"><i class="ri-chat-1-line"></i> Text</button>
+            <button class="btn-save" style="background: #8b5cf6;" onclick="prepareImageShare()" title="Share Image"><i class="ri-image-line"></i> Image</button>
             <button class="btn-save" onclick="saveDayEnd()"><i class="ri-save-3-line"></i> Save Day End <small>[Alt+S]</small></button>
         </div>
     </div>
 
     <script src="js/config.js"></script>
+    <script src="js/share-image.js"></script>
     <script src="js/dashboard.js"></script>
 
     <script>
+        function prepareImageShare() {
+            const data = {
+                date: document.getElementById('date').value,
+                opening: parseFloat(document.getElementById('opening').value) || 0,
+                transactions: transactions,
+                totalIn: transactions.filter(t => t.t_type === 'IN').reduce((sum, t) => sum + t.amount, 0),
+                totalOut: transactions.filter(t => t.t_type === 'OUT').reduce((sum, t) => sum + t.amount, 0),
+                finalBalance: parseFloat(document.getElementById('finalBalance').innerText.replace(/[^0-9.-]+/g,""))
+            };
+            shareReportAsImage(data);
+        }
         function showShortcuts() {
             alert("⌨️ Keyboard Shortcuts:\n\nAlt + I : Cash IN Entry\nAlt + O : Cash OUT Entry\nEnter : Save Entry\nAlt + S : Save Day End\nAlt + H : Go to History");
         }

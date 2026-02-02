@@ -138,8 +138,10 @@ function renderTable(data) {
                 <td data-label="Date">
                     <div style="display:flex; align-items:center; gap:8px;">
                         ${row.t_date}
-                        <i class="ri-whatsapp-line" style="color:#25D366; cursor:pointer; font-size:1.1rem;" 
-                           title="Share this day's report" onclick="shareDayFromHistory('${row.t_date}')"></i>
+                        <i class="ri-chat-1-line" style="color:#25D366; cursor:pointer; font-size:1.1rem;" 
+                           title="Share Text" onclick="shareDayFromHistory('${row.t_date}')"></i>
+                        <i class="ri-image-line" style="color:#8b5cf6; cursor:pointer; font-size:1.1rem;" 
+                           title="Share Image" onclick="shareDayAsImage('${row.t_date}')"></i>
                     </div>
                 </td>
                 <td data-label="Name">${row.party_name}</td>
@@ -314,4 +316,31 @@ function shareDayFromHistory(date) {
     msg += `*${e_money} Net Change:* ${formatCurrency(totalIn - totalOut)}`;
 
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// হিস্ট্রি থেকে ইমেজ শেয়ার করার লজিক
+async function shareDayAsImage(date) {
+    const dayTrans = allData.filter(t => t.t_date === date);
+    if (dayTrans.length === 0) return;
+
+    const { data: lastSaved } = await _supabase.from('daily_accounts')
+        .select('opening_balance')
+        .eq('user_id', currentUser.id)
+        .eq('report_date', date)
+        .limit(1);
+
+    const opening = (lastSaved && lastSaved.length > 0) ? lastSaved[0].opening_balance : 0;
+    const totalIn = dayTrans.filter(t => t.t_type === 'IN').reduce((sum, t) => sum + t.amount, 0);
+    const totalOut = dayTrans.filter(t => t.t_type === 'OUT').reduce((sum, t) => sum + t.amount, 0);
+
+    const data = {
+        date: date,
+        opening: opening,
+        transactions: dayTrans,
+        totalIn: totalIn,
+        totalOut: totalOut,
+        finalBalance: (opening + totalIn) - totalOut
+    };
+
+    shareReportAsImage(data);
 }
