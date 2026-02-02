@@ -1,5 +1,13 @@
-.login-wrapper { display: flex; height: 80vh; align-items: center; justify-content: center; width: 100%; }
-.login-box { text-align: center; width: 100%; max-width: 400px; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-.login-title { color: #2563eb; margin-bottom: 20px; }
-.btn-login { background: #2563eb; color: white; }
-.btn-link { background: none; color: #666; font-size: 0.9rem; }
+.login-wrapper { display: flex; height: 100vh; align-items: center; justify-content: center; background: #f0f9ff; }
+.login-box { width: 100%; max-width: 400px; background: white; padding: 40px 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1); text-align: center; }
+.logo-area { width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 20px; }
+.login-title { color: var(--text-main); margin-bottom: 5px; font-size: 1.5rem; }
+.login-subtitle { color: var(--text-light); margin-bottom: 30px; font-size: 0.9rem; }
+
+.input-group { position: relative; margin-bottom: 15px; }
+.input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-light); }
+.input-group input { padding-left: 40px; }
+
+.btn-login { background: var(--primary); color: white; margin-top: 10px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+.btn-link { background: none; color: var(--text-light); font-size: 0.9rem; margin-top: 15px; }
+.btn-link:hover { color: var(--primary); }

@@ -8,36 +8,37 @@
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/history.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <div class="navbar">
-            <h2>📜 Records</h2>
-            <div class="nav-links">
-                <a href="dashboard.html">🏠</a>
+            <div class="brand">
+                <a href="dashboard.html" class="back-btn"><i class="ri-arrow-left-line"></i></a>
+                <h2>Records</h2>
             </div>
         </div>
 
-        <button class="btn-pdf" onclick="downloadPDF()">📥 Download PDF</button>
+        <div class="filter-area">
+            <input type="month" id="monthPicker" onchange="loadHistory()">
+        </div>
 
-        <div class="table-wrapper">
-            <table id="historyTable">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Recv</th>
-                        <th>Exp</th>
-                        <th>Bal</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <!-- Data here -->
-                </tbody>
-            </table>
+        <div id="historyList" class="history-container">
+            <div class="loading">Loading records...</div>
         </div>
     </div>
+
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h3 id="modalDate">Details</h3>
+            <div class="modal-body">
+                <div id="modalInList"></div>
+                <div id="modalOutList"></div>
+            </div>
+        </div>
+    </div>
+
     <script src="js/config.js"></script>
     <script src="js/history.js"></script>
 </body>

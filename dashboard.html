@@ -3,45 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Dashboard - Hisab</title>
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <!-- Navbar -->
         <div class="navbar">
-            <h2>📝 Hisab</h2>
+            <div class="brand">
+                <i class="ri-wallet-3-line"></i>
+                <h2>Hisab Premium</h2>
+            </div>
             <div class="nav-links">
-                <a href="history.html">📜</a>
-                <a href="profile.html">👤</a>
+                <a href="history.html"><i class="ri-file-list-3-line"></i></a>
+                <a href="profile.html"><i class="ri-user-3-line"></i></a>
             </div>
         </div>
 
-        <input type="date" id="date">
-
-        <div class="section-in">
-            <h4>Money IN (+)</h4>
-            <input type="number" id="opening" placeholder="Opening Balance" oninput="calculate()">
-            <input type="number" id="received" placeholder="Cash Received" oninput="calculate()">
+        <div class="top-controls">
+            <input type="date" id="date" class="date-picker">
+            <div class="opening-box">
+                <small>Opening Balance</small>
+                <input type="number" id="opening" value="0" oninput="updateSummary()">
+            </div>
         </div>
 
-        <div class="section-out">
-            <h4>Money OUT (-)</h4>
-            <input type="number" id="client" placeholder="Given to Client" oninput="calculate()">
-            <input type="number" id="bill" placeholder="Expenses / Bill" oninput="calculate()">
+        <div class="entry-grid">
+            <div class="card card-in">
+                <div class="card-header">
+                    <i class="ri-arrow-down-circle-fill"></i> Cash IN (+)
+                </div>
+                <div class="input-group">
+                    <input type="text" id="inName" placeholder="From (Name)" list="nameSuggestions">
+                    <input type="number" id="inAmount" placeholder="Amount">
+                    <button class="btn-add-in" onclick="addTransaction('IN')"><i class="ri-add-line"></i></button>
+                </div>
+                <ul id="listIn" class="trans-list"></ul>
+            </div>
+
+            <div class="card card-out">
+                <div class="card-header">
+                    <i class="ri-arrow-up-circle-fill"></i> Cash OUT (-)
+                </div>
+                <div class="input-group">
+                    <input type="text" id="outName" placeholder="To (Name/Exp)" list="nameSuggestions">
+                    <input type="number" id="outAmount" placeholder="Amount">
+                    <button class="btn-add-out" onclick="addTransaction('OUT')"><i class="ri-add-line"></i></button>
+                </div>
+                <ul id="listOut" class="trans-list"></ul>
+            </div>
         </div>
 
-        <div class="balance-box">
-            <small>Petty Cash</small>
-            <h1 id="total">0</h1>
+        <datalist id="nameSuggestions"></datalist>
+
+        <div class="summary-box">
+            <div class="sum-row">
+                <span>Total In:</span> <span id="sumIn" class="text-green">0</span>
+            </div>
+            <div class="sum-row">
+                <span>Total Out:</span> <span id="sumOut" class="text-red">0</span>
+            </div>
+            <div class="divider"></div>
+            <div class="sum-total">
+                <small>Closing Balance</small>
+                <h1 id="finalBalance">0</h1>
+            </div>
         </div>
 
-        <button class="btn-whatsapp" onclick="share()">📲 WhatsApp Share</button>
-        <button class="btn-save" onclick="save()">💾 Save to Database</button>
+        <div class="action-buttons">
+            <button class="btn-whatsapp" onclick="shareWhatsApp()"><i class="ri-whatsapp-line"></i> Share</button>
+            <button class="btn-save" onclick="saveDayEnd()"><i class="ri-save-3-line"></i> Day End Save</button>
+        </div>
     </div>
+
     <script src="js/config.js"></script>
     <script src="js/dashboard.js"></script>
 </body>
