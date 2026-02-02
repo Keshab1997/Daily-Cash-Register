@@ -49,7 +49,7 @@
         <div class="entry-grid">
             <div class="card card-in">
                 <div class="card-header">
-                    <span class="text-green">Cash Received (IN) <small>[Alt + I]</small></span>
+                    <span class="text-green">Cash Received (IN) <small class="shortcut-text">[Alt + I]</small></span>
                     <i class="ri-arrow-down-circle-line text-green"></i>
                 </div>
                 <div class="input-group">
@@ -62,7 +62,7 @@
 
             <div class="card card-out">
                 <div class="card-header">
-                    <span class="text-red">Cash Payment (OUT) <small>[Alt + O]</small></span>
+                    <span class="text-red">Cash Payment (OUT) <small class="shortcut-text">[Alt + O]</small></span>
                     <i class="ri-arrow-up-circle-line text-red"></i>
                 </div>
                 <div class="input-group">
@@ -92,9 +92,9 @@
         </div>
 
         <div class="action-buttons">
-            <button class="btn-whatsapp" onclick="shareWhatsApp()" title="Share Text"><i class="ri-chat-1-line"></i> Text</button>
-            <button class="btn-save" style="background: #8b5cf6;" onclick="prepareImageShare()" title="Share Image"><i class="ri-image-line"></i> Image</button>
-            <button class="btn-save" onclick="saveDayEnd()"><i class="ri-save-3-line"></i> Save Day End <small>[Alt+S]</small></button>
+            <button class="btn-whatsapp" onclick="shareWhatsApp()" title="Share Text"><i class="ri-chat-1-line"></i> <span class="btn-label">Text</span></button>
+            <button class="btn-image" onclick="prepareImageShare()" title="Share Image"><i class="ri-image-line"></i> <span class="btn-label">Image</span></button>
+            <button class="btn-save" onclick="saveDayEnd()"><i class="ri-save-3-line"></i> <span class="btn-label">Save Day End <small class="shortcut-text">[Alt+S]</small></span></button>
         </div>
     </div>
 

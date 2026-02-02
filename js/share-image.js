@@ -24,7 +24,7 @@ async function shareReportAsImage(data) {
 
     voucher.innerHTML = `
         <div style="text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 20px;">
-            <h2 style="margin: 0; color: #2563eb; font-size: 22px;">HISAB MANAGER</h2>
+            <h2 style="margin: 0; color: #2563eb; font-size: 22px;">HISAB KHATA</h2>
             <p style="margin: 5px 0 0; font-size: 12px; color: #6b7280;">Daily Cash Report</p>
         </div>
         
@@ -62,10 +62,11 @@ async function shareReportAsImage(data) {
 
     try {
         const canvas = await html2canvas(voucher, { scale: 2 });
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-        const file = new File([blob], `Hisab_Report_${date}.png`, { type: 'image/png' });
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        if (isMobile && navigator.share) {
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            const file = new File([blob], `Hisab_${date}.png`, { type: 'image/png' });
             await navigator.share({
                 files: [file],
                 title: 'Daily Hisab Report',
@@ -74,13 +75,11 @@ async function shareReportAsImage(data) {
         } else {
             const link = document.createElement('a');
             link.download = `Hisab_Report_${date}.png`;
-            link.href = canvas.toDataURL();
+            link.href = canvas.toDataURL("image/png");
             link.click();
-            alert("Sharing not supported. Image downloaded instead.");
         }
     } catch (err) {
-        console.error("Error sharing image:", err);
-        alert("Failed to generate image report.");
+        console.error("Error:", err);
     } finally {
         document.body.removeChild(voucher);
     }
