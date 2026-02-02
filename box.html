@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secret Box - Hisab</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2331/2331966.png">
+    
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/box.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div class="brand">
+                <a href="dashboard.html" class="back-btn"><i class="ri-arrow-left-line"></i></a>
+                <h2>Secret Box 📦</h2>
+            </div>
+            <div class="nav-links">
+                <a href="dashboard.html" title="Home"><i class="ri-home-4-line"></i></a>
+                <a href="box.html" title="Secret Box" class="active-nav"><i class="ri-archive-drawer-line"></i></a>
+                <a href="history.html" title="History"><i class="ri-file-list-3-line"></i></a>
+                <a href="profile.html" title="Profile"><i class="ri-user-3-line"></i></a>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card system-card">
+                <small>System Balance (Official)</small>
+                <span id="sysBal">₹0.00</span>
+                <i class="ri-computer-line icon-bg"></i>
+            </div>
+            <div class="stat-card due-card">
+                <small>Personal Due (Short)</small>
+                <span id="dueBal">₹0.00</span>
+                <i class="ri-user-shared-line icon-bg"></i>
+            </div>
+            <div class="stat-card physical-card">
+                <small>Physical Cash (Actual)</small>
+                <span id="phyBal">₹0.00</span>
+                <i class="ri-money-dollar-circle-line icon-bg"></i>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <h3>New Entry</h3>
+            <div class="input-row">
+                <input type="text" id="desc" placeholder="Description (e.g. Loan to Rahim)" list="secretSuggestions">
+                <input type="number" id="amount" placeholder="Amount">
+            </div>
+            <div class="btn-row">
+                <button class="btn-take" onclick="addSecretTransaction('TAKE')">
+                    <i class="ri-hand-coin-line"></i> Take from Cash
+                </button>
+                <button class="btn-return" onclick="addSecretTransaction('RETURN')">
+                    <i class="ri-arrow-go-back-line"></i> Return to Cash
+                </button>
+            </div>
+        </div>
+
+        <datalist id="secretSuggestions"></datalist>
+
+        <div class="history-section">
+            <div class="history-header">
+                <h3>Recent Activity</h3>
+                <div class="search-wrapper">
+                    <i class="ri-search-line"></i>
+                    <input type="text" id="searchActivity" placeholder="Search description..." oninput="filterActivity()">
+                </div>
+            </div>
+            <ul id="secretList" class="secret-list"></ul>
+            <div id="noSecretData" class="no-data-msg" style="display:none;">No matching activity found.</div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/box.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+.active-nav { color: var(--primary) !important; font-weight: bold; }
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+@media (max-width: 768px) {
+    .stats-grid { grid-template-columns: 1fr; }
+}
+
+.stat-card {
+    padding: 20px;
+    border-radius: 12px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.stat-card small { font-size: 0.85rem; opacity: 0.9; display: block; margin-bottom: 5px; }
+.stat-card span { font-size: 1.5rem; font-weight: 700; font-family: 'Courier New', monospace; }
+.icon-bg { position: absolute; right: 10px; bottom: 10px; font-size: 3rem; opacity: 0.2; }
+
+.system-card { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.due-card { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.physical-card { background: linear-gradient(135deg, #10b981, #059669); }
+
+.input-section {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin-bottom: 25px;
+}
+
+.input-section h3 { margin-bottom: 15px; font-size: 1.1rem; }
+
+.input-row { display: flex; gap: 10px; margin-bottom: 15px; }
+.input-row input { flex: 1; }
+
+.btn-row { display: flex; gap: 15px; }
+.btn-take { background: #ef4444; color: white; flex: 1; }
+.btn-return { background: #6366f1; color: white; flex: 1; }
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.search-wrapper {
+    position: relative;
+    flex: 1;
+    max-width: 300px;
+}
+
+.search-wrapper i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+}
+
+.search-wrapper input {
+    padding: 8px 12px 8px 35px;
+    font-size: 0.9rem;
+    border-radius: 20px;
+    background: #fff;
+}
+
+.secret-list { list-style: none; padding: 0; }
+
+.secret-list li {
+    background: white;
+    border: 1px solid var(--border);
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.li-left { display: flex; flex-direction: column; }
+.li-date { font-size: 0.75rem; color: var(--text-light); }
+.li-desc { font-weight: 500; }
+
+.li-right { text-align: right; display: flex; align-items: center; gap: 10px; }
+.li-amount { font-weight: 700; font-family: 'Courier New', monospace; }
+.li-type { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+
+.type-take { color: #ef4444; background: #fee2e2; }
+.type-return { color: #10b981; background: #d1fae5; }
+
+.del-btn { color: #9ca3af; cursor: pointer; }
+.del-btn:hover { color: #ef4444; }
+
+.no-data-msg {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-light);
+    background: #f9fafb;
+    border-radius: 8px;
+}
