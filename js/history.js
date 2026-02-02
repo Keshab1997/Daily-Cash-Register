@@ -2,6 +2,10 @@ let currentUser = null;
 let allData = [];
 let filteredData = [];
 
+const getISTDate = () => {
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+};
+
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
@@ -13,13 +17,16 @@ window.onload = async () => {
     const session = await checkAuth(true);
     currentUser = session.user;
     
-    const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
-    
+    const istToday = getISTDate();
+    const [year, month, day] = istToday.split('-');
+
+    const firstDay = `${year}-${month}-01`;
+    const lastDayObj = new Date(year, month, 0);
+    const lastDay = lastDayObj.toISOString().split('T')[0];
+
     document.getElementById('startDate').value = firstDay;
     document.getElementById('endDate').value = lastDay;
-    
+
     fetchHistory();
 };
 
@@ -146,11 +153,16 @@ function downloadPDF() {
 function shareHistory() {
     if(filteredData.length === 0) return alert("No data to share!");
 
-    let msg = `*📒 Hisab Report*\n`;
-    msg += `🗓 ${document.getElementById('startDate').value} to ${document.getElementById('endDate').value}\n\n`;
+    const e_book = '\uD83D\uDCD2';
+    const e_cal = '\uD83D\uDDD3';
+    const e_in = '\uD83D\uDFE2';
+    const e_out = '\uD83D\uDD34';
+
+    let msg = `*${e_book} Hisab Report*\n`;
+    msg += `${e_cal} ${document.getElementById('startDate').value} to ${document.getElementById('endDate').value}\n\n`;
 
     filteredData.forEach(row => {
-        const icon = row.t_type === 'IN' ? '🟢' : '🔴';
+        const icon = row.t_type === 'IN' ? e_in : e_out;
         msg += `${icon} ${row.t_date} | ${row.party_name} | ₹${row.amount}\n`;
     });
 

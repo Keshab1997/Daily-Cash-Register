@@ -18,6 +18,9 @@
                 <h2>Hisab Manager</h2>
             </div>
             <div class="nav-links">
+                <button class="btn-icon-nav" onclick="showShortcuts()" title="Keyboard Shortcuts">
+                    <i class="ri-keyboard-box-line"></i>
+                </button>
                 <a href="history.html" title="History"><i class="ri-file-list-3-line"></i></a>
                 <a href="profile.html" title="Profile"><i class="ri-user-3-line"></i></a>
             </div>
@@ -25,7 +28,7 @@
 
         <div class="top-controls">
             <div class="date-group">
-                <label class="label-text">Select Date</label>
+                <label class="label-text">Date (IST)</label>
                 <input type="date" id="date">
             </div>
             <div class="opening-group">
@@ -37,7 +40,7 @@
         <div class="entry-grid">
             <div class="card card-in">
                 <div class="card-header">
-                    <span class="text-green">Cash Received (IN)</span>
+                    <span class="text-green">Cash Received (IN) <small>[Alt + I]</small></span>
                     <i class="ri-arrow-down-circle-line text-green"></i>
                 </div>
                 <div class="input-group">
@@ -50,7 +53,7 @@
 
             <div class="card card-out">
                 <div class="card-header">
-                    <span class="text-red">Cash Payment (OUT)</span>
+                    <span class="text-red">Cash Payment (OUT) <small>[Alt + O]</small></span>
                     <i class="ri-arrow-up-circle-line text-red"></i>
                 </div>
                 <div class="input-group">
@@ -80,12 +83,18 @@
         </div>
 
         <div class="action-buttons">
-            <button class="btn-whatsapp" onclick="shareWhatsApp()"><i class="ri-whatsapp-line"></i> Share Report</button>
-            <button class="btn-save" onclick="saveDayEnd()"><i class="ri-save-3-line"></i> Save Day End</button>
+            <button class="btn-whatsapp" onclick="shareWhatsApp()"><i class="ri-whatsapp-line"></i> Share</button>
+            <button class="btn-save" onclick="saveDayEnd()"><i class="ri-save-3-line"></i> Save Day End <small>[Alt+S]</small></button>
         </div>
     </div>
 
     <script src="js/config.js"></script>
     <script src="js/dashboard.js"></script>
+
+    <script>
+        function showShortcuts() {
+            alert("⌨️ Keyboard Shortcuts:\n\nAlt + I : Cash IN Entry\nAlt + O : Cash OUT Entry\nEnter : Save Entry\nAlt + S : Save Day End\nAlt + H : Go to History");
+        }
+    </script>
 </body>
 </html>

@@ -1,5 +1,9 @@
 let currentUser = null;
-let transactions = []; 
+let transactions = [];
+
+const getISTDate = () => {
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+};
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -12,20 +16,79 @@ window.onload = async () => {
     const session = await checkAuth(true);
     currentUser = session.user;
     
+    if (Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
+
     const dateInput = document.getElementById('date');
     if (!dateInput.value) {
-        dateInput.value = new Date().toISOString().split('T')[0];
+        dateInput.value = getISTDate();
     }
 
     dateInput.addEventListener('change', () => {
         fetchOpeningBalance();
         loadTodayTransactions();
     });
-    
+
+    setupKeyboardShortcuts();
+
+    await checkAutoDayEnd();
     await fetchOpeningBalance();
     await loadTodayTransactions();
     await loadSuggestions();
 };
+
+function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+        if (e.altKey && e.code === 'KeyI') {
+            e.preventDefault();
+            document.getElementById('inName').focus();
+        }
+        if (e.altKey && e.code === 'KeyO') {
+            e.preventDefault();
+            document.getElementById('outName').focus();
+        }
+        if (e.altKey && e.code === 'KeyS') {
+            e.preventDefault();
+            saveDayEnd();
+        }
+        if (e.altKey && e.code === 'KeyH') {
+            e.preventDefault();
+            window.location.href = 'history.html';
+        }
+        if (e.key === 'Enter') {
+            if (document.activeElement.id === 'inName' || document.activeElement.id === 'inAmount') {
+                addTransaction('IN');
+            }
+            if (document.activeElement.id === 'outName' || document.activeElement.id === 'outAmount') {
+                addTransaction('OUT');
+            }
+        }
+    });
+}
+
+async function checkAutoDayEnd() {
+    const today = getISTDate();
+
+    const { data: lastRecord } = await _supabase.from('daily_accounts')
+        .select('report_date')
+        .eq('user_id', currentUser.id)
+        .order('report_date', { ascending: false })
+        .limit(1);
+
+    if (lastRecord && lastRecord.length > 0) {
+        const lastDate = lastRecord[0].report_date;
+        if (lastDate < today) {
+            sendNotification("📅 New Day Started", `Date changed to ${today}. Opening balance updated.`);
+        }
+    }
+}
+
+function sendNotification(title, body) {
+    if (Notification.permission === "granted") {
+        new Notification(title, { body: body });
+    }
+}
 
 async function fetchOpeningBalance() {
     const { data } = await _supabase.from('daily_accounts')
@@ -77,10 +140,7 @@ async function addTransaction(type) {
     const name = nameInput.value.trim();
     const amount = parseFloat(amountInput.value);
 
-    if (!name || !amount || amount <= 0) {
-        alert("Please enter valid Name and Amount");
-        return;
-    }
+    if (!name || !amount || amount <= 0) return;
 
     btn.disabled = true;
     const originalHtml = btn.innerHTML;
@@ -172,7 +232,10 @@ async function saveDayEnd() {
         .upsert(summaryPayload, { onConflict: 'user_id, report_date' });
 
     if(error) alert('Error: ' + error.message);
-    else alert('✅ Day End Saved Successfully!');
+    else {
+        sendNotification("✅ Saved", "Day End report saved successfully!");
+        alert('✅ Day End Saved Successfully!');
+    }
 }
 
 function shareWhatsApp() {
@@ -180,22 +243,28 @@ function shareWhatsApp() {
     const opening = formatCurrency(document.getElementById('opening').value);
     const final = document.getElementById('finalBalance').innerText;
     
-    let msg = `*📅 Daily Report (${date})*\n`;
+    const e_cal = '\uD83D\uDCC5';
+    const e_bag = '\uD83D\uDCBC';
+    const e_in = '\uD83D\uDFE2';
+    const e_out = '\uD83D\uDD34';
+    const e_money = '\uD83D\uDCB0';
+
+    let msg = `*${e_cal} Daily Report (${date})*\n`;
     msg += `----------------------------\n`;
-    msg += `🔹 Opening: ${opening}\n\n`;
+    msg += `${e_bag} Opening: ${opening}\n\n`;
     
-    msg += `*📥 RECEIVED:*\n`;
+    msg += `*${e_in} RECEIVED:*\n`;
     transactions.filter(t => t.t_type === 'IN').forEach(t => {
-        msg += `• ${t.party_name}: ${formatCurrency(t.amount)}\n`;
+        msg += `+ ${t.party_name}: ${formatCurrency(t.amount)}\n`;
     });
     
-    msg += `\n*📤 PAID:*\n`;
+    msg += `\n*${e_out} PAID:*\n`;
     transactions.filter(t => t.t_type === 'OUT').forEach(t => {
-        msg += `• ${t.party_name}: ${formatCurrency(t.amount)}\n`;
+        msg += `- ${t.party_name}: ${formatCurrency(t.amount)}\n`;
     });
 
     msg += `\n----------------------------\n`;
-    msg += `*💰 Closing: ${final}*`;
+    msg += `*${e_money} Closing: ${final}*`;
 
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 }
