@@ -135,7 +135,13 @@ function renderTable(data) {
                 <td>
                     <input type="checkbox" class="row-checkbox" value="${row.id}" onchange="toggleRowSelection(this)">
                 </td>
-                <td data-label="Date">${row.t_date}</td>
+                <td data-label="Date">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        ${row.t_date}
+                        <i class="ri-whatsapp-line" style="color:#25D366; cursor:pointer; font-size:1.1rem;" 
+                           title="Share this day's report" onclick="shareDayFromHistory('${row.t_date}')"></i>
+                    </div>
+                </td>
                 <td data-label="Name">${row.party_name}</td>
                 <td data-label="Type"><span class="badge ${badgeClass}">${typeLabel}</span></td>
                 <td data-label="Amount" class="amount-cell ${amountClass}">${formatCurrency(row.amount)}</td>
@@ -260,6 +266,52 @@ function shareHistory() {
 
     msg += `\n------------------\n`;
     msg += `*Total Net: ${document.getElementById('totalAmount').innerText}*`;
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// --- নির্দিষ্ট দিনের হিসাব হোয়াটসঅ্যাপ করার ফাংশন ---
+function shareDayFromHistory(date) {
+    // ওই তারিখের সব ট্রানজেকশন ফিল্টার করা
+    const dayTrans = allData.filter(t => t.t_date === date);
+    
+    if (dayTrans.length === 0) return;
+
+    const e_cal = '\uD83D\uDCC5';
+    const e_in = '\uD83D\uDFE2';
+    const e_out = '\uD83D\uDD34';
+    const e_money = '\uD83D\uDCB0';
+
+    let msg = `*${e_cal} Daily Report (${date})*\n`;
+    msg += `----------------------------\n\n`;
+    
+    let totalIn = 0;
+    let totalOut = 0;
+
+    const inTrans = dayTrans.filter(t => t.t_type === 'IN');
+    if (inTrans.length > 0) {
+        msg += `*${e_in} RECEIVED:*\n`;
+        inTrans.forEach(t => {
+            msg += `+ ${t.party_name}: ${formatCurrency(t.amount)}\n`;
+            totalIn += t.amount;
+        });
+        msg += `\n`;
+    }
+    
+    const outTrans = dayTrans.filter(t => t.t_type === 'OUT');
+    if (outTrans.length > 0) {
+        msg += `*${e_out} PAID:*\n`;
+        outTrans.forEach(t => {
+            msg += `- ${t.party_name}: ${formatCurrency(t.amount)}\n`;
+            totalOut += t.amount;
+        });
+        msg += `\n`;
+    }
+
+    msg += `----------------------------\n`;
+    msg += `*Total Received:* ${formatCurrency(totalIn)}\n`;
+    msg += `*Total Paid:* ${formatCurrency(totalOut)}\n`;
+    msg += `*${e_money} Net Change:* ${formatCurrency(totalIn - totalOut)}`;
 
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 }
