@@ -24,7 +24,7 @@ async function shareReportAsImage(data) {
 
     voucher.innerHTML = `
         <div style="text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 20px;">
-            <h2 style="margin: 0; color: #2563eb; font-size: 22px;">HISAB KHATA</h2>
+            <h2 style="margin: 0; color: #2563eb; font-size: 22px;">DAILY CASH REGISTER</h2>
             <p style="margin: 5px 0 0; font-size: 12px; color: #6b7280;">Daily Cash Report</p>
         </div>
         

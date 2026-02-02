@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hisab-manager-v3';
+const CACHE_NAME = 'hisab-manager-v5';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -19,11 +19,13 @@ const ASSETS_TO_CACHE = [
     './js/history.js',
     './js/profile.js',
     './js/box.js',
+    './js/share-image.js',
     'https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css',
     'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
     'https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js',
     'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js'
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
 ];
 
 self.addEventListener('install', (event) => {
