@@ -10,3 +10,23 @@
 
 .btn-logout { background: #fee2e2; color: #ef4444; }
 .btn-logout:hover { background: #fecaca; }
+
+/* Danger Zone Styles */
+.danger-zone {
+    margin-top: 30px;
+    padding: 20px;
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.danger-zone h4 { color: #991b1b; margin-bottom: 5px; }
+.danger-zone p { color: #b91c1c; font-size: 0.85rem; margin-bottom: 15px; }
+
+.btn-reset {
+    background: #ef4444;
+    color: white;
+    border: none;
+}
+.btn-reset:hover { background: #dc2626; }

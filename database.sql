@@ -31,6 +31,7 @@ alter table transactions enable row level security;
 create policy if not exists "Users can view own data" on daily_accounts for select using (auth.uid() = user_id);
 create policy if not exists "Users can insert own data" on daily_accounts for insert with check (auth.uid() = user_id);
 create policy if not exists "Users can update own data" on daily_accounts for update using (auth.uid() = user_id);
+create policy if not exists "Users can delete own data" on daily_accounts for delete using (auth.uid() = user_id);
 
 create policy if not exists "Users can view own transactions" on transactions for select using (auth.uid() = user_id);
 create policy if not exists "Users can insert own transactions" on transactions for insert with check (auth.uid() = user_id);

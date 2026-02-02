@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Hisab</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2331/2331966.png">
+    
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/dashboard.css">
@@ -94,6 +99,9 @@
     <script>
         function showShortcuts() {
             alert("⌨️ Keyboard Shortcuts:\n\nAlt + I : Cash IN Entry\nAlt + O : Cash OUT Entry\nEnter : Save Entry\nAlt + S : Save Day End\nAlt + H : Go to History");
+        }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
         }
     </script>
 </body>

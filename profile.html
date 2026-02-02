@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2331/2331966.png">
+    
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/profile.css">
@@ -41,8 +46,22 @@
                 <i class="ri-logout-box-r-line"></i> Logout
             </button>
         </div>
+
+        <!-- Danger Zone for Data Reset -->
+        <div class="danger-zone">
+            <h4>⚠️ Danger Zone</h4>
+            <p>Once you delete your data, there is no going back. Please be certain.</p>
+            <button class="btn-reset" onclick="resetAccount()">
+                <i class="ri-delete-bin-7-line"></i> Delete All Data (Factory Reset)
+            </button>
+        </div>
     </div>
     <script src="js/config.js"></script>
     <script src="js/profile.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
 </body>
 </html>

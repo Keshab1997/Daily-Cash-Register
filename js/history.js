@@ -1,6 +1,8 @@
 let currentUser = null;
 let allData = [];
 let filteredData = [];
+let selectedNames = [];
+let selectedIds = [];
 
 const getISTDate = () => {
     return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
@@ -19,7 +21,6 @@ window.onload = async () => {
     
     const istToday = getISTDate();
     const [year, month, day] = istToday.split('-');
-
     const firstDay = `${year}-${month}-01`;
     const lastDayObj = new Date(year, month, 0);
     const lastDay = lastDayObj.toISOString().split('T')[0];
@@ -28,6 +29,12 @@ window.onload = async () => {
     document.getElementById('endDate').value = lastDay;
 
     fetchHistory();
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.custom-select-wrapper')) {
+            document.getElementById('nameDropdown').classList.remove('show');
+        }
+    });
 };
 
 async function fetchHistory() {
@@ -50,28 +57,60 @@ async function fetchHistory() {
     }
 
     allData = data || [];
-    loadSuggestions(allData);
+    populateNameFilter(allData);
     applyFilters();
 }
 
-function loadSuggestions(data) {
+function populateNameFilter(data) {
     const uniqueNames = [...new Set(data.map(item => item.party_name))];
-    const datalist = document.getElementById('nameSuggestions');
-    datalist.innerHTML = uniqueNames.map(name => `<option value="${name}">`).join('');
+    const dropdown = document.getElementById('nameDropdown');
+    
+    dropdown.innerHTML = '';
+    uniqueNames.forEach(name => {
+        const div = document.createElement('div');
+        div.className = 'dropdown-item';
+        div.innerHTML = `
+            <input type="checkbox" value="${name}" onchange="toggleNameFilter(this)">
+            <span>${name}</span>
+        `;
+        dropdown.appendChild(div);
+    });
+}
+
+function toggleDropdown() {
+    document.getElementById('nameDropdown').classList.toggle('show');
+}
+
+function toggleNameFilter(checkbox) {
+    if (checkbox.checked) {
+        selectedNames.push(checkbox.value);
+    } else {
+        selectedNames = selectedNames.filter(n => n !== checkbox.value);
+    }
+    
+    const textSpan = document.getElementById('selectedText');
+    if (selectedNames.length === 0) textSpan.innerText = "Select Names...";
+    else if (selectedNames.length === 1) textSpan.innerText = selectedNames[0];
+    else textSpan.innerText = `${selectedNames.length} Names Selected`;
+
+    applyFilters();
 }
 
 function applyFilters() {
     const typeFilter = document.getElementById('typeFilter').value;
-    const searchText = document.getElementById('searchInput').value.toLowerCase();
 
     filteredData = allData.filter(item => {
         const typeMatch = (typeFilter === 'ALL') || (item.t_type === typeFilter);
-        const nameMatch = item.party_name.toLowerCase().includes(searchText);
+        const nameMatch = (selectedNames.length === 0) || selectedNames.includes(item.party_name);
         return typeMatch && nameMatch;
     });
 
     renderTable(filteredData);
     updateMiniSummary(filteredData);
+
+    selectedIds = [];
+    updateBulkDeleteUI();
+    document.getElementById('selectAll').checked = false;
 }
 
 function renderTable(data) {
@@ -93,19 +132,72 @@ function renderTable(data) {
         
         const tr = `
             <tr>
+                <td>
+                    <input type="checkbox" class="row-checkbox" value="${row.id}" onchange="toggleRowSelection(this)">
+                </td>
                 <td data-label="Date">${row.t_date}</td>
                 <td data-label="Name">${row.party_name}</td>
                 <td data-label="Type"><span class="badge ${badgeClass}">${typeLabel}</span></td>
                 <td data-label="Amount" class="amount-cell ${amountClass}">${formatCurrency(row.amount)}</td>
-                <td data-label="Action">
-                    <button onclick="deleteEntry(${row.id})" style="background:#fee2e2; color:#ef4444; padding:5px 10px; border-radius:5px;">
-                        <i class="ri-delete-bin-line"></i>
-                    </button>
-                </td>
             </tr>
         `;
         tbody.innerHTML += tr;
     });
+}
+
+function toggleSelectAll() {
+    const mainCb = document.getElementById('selectAll');
+    const rowCbs = document.querySelectorAll('.row-checkbox');
+    
+    selectedIds = [];
+    rowCbs.forEach(cb => {
+        cb.checked = mainCb.checked;
+        if(mainCb.checked) selectedIds.push(parseInt(cb.value));
+    });
+
+    updateBulkDeleteUI();
+}
+
+function toggleRowSelection(cb) {
+    const id = parseInt(cb.value);
+    if (cb.checked) {
+        selectedIds.push(id);
+    } else {
+        selectedIds = selectedIds.filter(sid => sid !== id);
+        document.getElementById('selectAll').checked = false;
+    }
+    updateBulkDeleteUI();
+}
+
+function updateBulkDeleteUI() {
+    const btn = document.getElementById('bulkDeleteBtn');
+    const countSpan = document.getElementById('selCount');
+    
+    countSpan.innerText = selectedIds.length;
+    if (selectedIds.length > 0) {
+        btn.classList.remove('hidden');
+    } else {
+        btn.classList.add('hidden');
+    }
+}
+
+async function deleteSelected() {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedIds.length} items?`)) return;
+
+    const { error } = await _supabase.from('transactions')
+        .delete()
+        .in('id', selectedIds);
+
+    if (error) {
+        alert("Failed to delete: " + error.message);
+    } else {
+        allData = allData.filter(item => !selectedIds.includes(item.id));
+        selectedIds = [];
+        document.getElementById('selectAll').checked = false;
+        updateBulkDeleteUI();
+        applyFilters();
+    }
 }
 
 function updateMiniSummary(data) {
@@ -170,16 +262,4 @@ function shareHistory() {
     msg += `*Total Net: ${document.getElementById('totalAmount').innerText}*`;
 
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-}
-
-async function deleteEntry(id) {
-    if(!confirm("Are you sure you want to delete this record?")) return;
-    
-    const { error } = await _supabase.from('transactions').delete().eq('id', id);
-    if(!error) {
-        allData = allData.filter(item => item.id !== id);
-        applyFilters();
-    } else {
-        alert("Failed to delete: " + error.message);
-    }
 }

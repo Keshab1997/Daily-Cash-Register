@@ -3,10 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History - Hisab</title>
+    <title>History - Daily Cash Register</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2331/2331966.png">
+    
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/history.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -38,44 +44,56 @@
             
             <div class="search-filters">
                 <select id="typeFilter" onchange="applyFilters()">
-                    <option value="ALL">All Types (In & Out)</option>
-                    <option value="IN">🟢 Received Only</option>
-                    <option value="OUT">🔴 Paid Only</option>
+                    <option value="ALL">All Types</option>
+                    <option value="IN">🟢 Received</option>
+                    <option value="OUT">🔴 Paid</option>
                 </select>
 
-                <div class="search-box">
-                    <i class="ri-search-line search-icon"></i>
-                    <input type="text" id="searchInput" placeholder="Search Name..." list="nameSuggestions" oninput="applyFilters()">
-                    <datalist id="nameSuggestions"></datalist>
+                <div class="custom-select-wrapper">
+                    <div class="select-box" onclick="toggleDropdown()">
+                        <span id="selectedText">Select Names...</span>
+                        <i class="ri-arrow-down-s-line"></i>
+                    </div>
+                    <div class="dropdown-list" id="nameDropdown"></div>
                 </div>
             </div>
         </div>
 
-        <div class="mini-summary">
-            <span>Found: <b id="countRow">0</b></span>
-            <span>Total: <b id="totalAmount">₹0.00</b></span>
+        <div class="action-bar">
+            <div class="mini-summary">
+                <span>Found: <b id="countRow">0</b></span>
+                <span>Total: <b id="totalAmount">₹0.00</b></span>
+            </div>
+            <button id="bulkDeleteBtn" class="btn-bulk-delete hidden" onclick="deleteSelected()">
+                <i class="ri-delete-bin-2-line"></i> Delete Selected (<span id="selCount">0</span>)
+            </button>
         </div>
 
         <div class="table-container">
             <table id="historyTable">
                 <thead>
                     <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="selectAll" onclick="toggleSelectAll()">
+                        </th>
                         <th>Date</th>
                         <th>Name / Description</th>
                         <th>Type</th>
                         <th>Amount</th>
-                        <th>Action</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody">
-                </tbody>
+                <tbody id="tableBody"></tbody>
             </table>
         </div>
-        
         <div id="noData" class="no-data">No records found matching your filters.</div>
     </div>
 
     <script src="js/config.js"></script>
     <script src="js/history.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
 </body>
 </html>
