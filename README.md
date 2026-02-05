@@ -89,6 +89,11 @@ Daily-Cash-Register/
 - 📊 সম্পূর্ণ হিস্ট্রি ভিউ
 - 📋 Person-wise Due Summary (কে কত পাবে তার তালিকা) 🆕
 
+### 💵 Dashboard ফিচার:
+- 🧮 Cash Denomination Calculator (নোট গণনার ক্যালকুলেটর) 🆕
+- ✅ Short/Excess ডিটেকশন
+- 💰 রিয়েল-টাইম ম্যাচিং
+
 ## 🔒 সিকিউরিটি
 
 - Row Level Security (RLS) দিয়ে প্রতিটি ইউজারের ডাটা সুরক্ষিত

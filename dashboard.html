@@ -25,13 +25,48 @@
                 <h2>Hisab Manager</h2>
             </a>
             <div class="nav-links">
-                <button class="btn-icon-nav" onclick="showShortcuts()" title="Keyboard Shortcuts">
-                    <i class="ri-keyboard-box-line"></i>
+                <button class="btn-icon-nav" onclick="toggleCashCounter()" title="Cash Counter">
+                    <i class="ri-calculator-line"></i>
                 </button>
                 <a href="dashboard.html" class="active" title="Home"><i class="ri-home-4-line"></i></a>
                 <a href="box.html" title="Secret Box"><i class="ri-archive-drawer-line"></i></a>
                 <a href="history.html" title="History"><i class="ri-file-list-3-line"></i></a>
                 <a href="profile.html" title="Profile"><i class="ri-user-3-line"></i></a>
+            </div>
+        </div>
+
+        <!-- Cash Denomination Counter -->
+        <div id="cashCounter" class="cash-counter-box" style="display: none;">
+            <div class="counter-header">
+                <span><i class="ri-coins-line"></i> Physical Cash Counter</span>
+                <button onclick="toggleCashCounter()" class="close-mini"><i class="ri-close-line"></i></button>
+            </div>
+            
+            <!-- Secret Adjustment Info -->
+            <div class="adjustment-info">
+                <small>Official Bal: <span id="offBal">₹0</span></small>
+                <small>Secret Due: <span id="secDue" style="color:#ef4444">₹0</span></small>
+                <div class="target-cash">Expected Cash: <b id="targetCash">₹0</b></div>
+            </div>
+
+            <div class="counter-grid">
+                <!-- High Denominations -->
+                <div class="denom-row high-val"><span>50k</span> <input type="number" class="denom-input" data-val="50000" oninput="calcDenom()"></div>
+                <div class="denom-row high-val"><span>20k</span> <input type="number" class="denom-input" data-val="20000" oninput="calcDenom()"></div>
+                <div class="denom-row high-val"><span>10k</span> <input type="number" class="denom-input" data-val="10000" oninput="calcDenom()"></div>
+                
+                <!-- Standard Denominations -->
+                <div class="denom-row"><span>500</span> <input type="number" class="denom-input" data-val="500" oninput="calcDenom()"></div>
+                <div class="denom-row"><span>200</span> <input type="number" class="denom-input" data-val="200" oninput="calcDenom()"></div>
+                <div class="denom-row"><span>100</span> <input type="number" class="denom-input" data-val="100" oninput="calcDenom()"></div>
+                <div class="denom-row"><span>50</span> <input type="number" class="denom-input" data-val="50" oninput="calcDenom()"></div>
+                <div class="denom-row"><span>20</span> <input type="number" class="denom-input" data-val="20" oninput="calcDenom()"></div>
+                <div class="denom-row"><span>10</span> <input type="number" class="denom-input" data-val="10" oninput="calcDenom()"></div>
+                <div class="denom-row"><span>Coins</span> <input type="number" class="denom-input" data-val="1" oninput="calcDenom()"></div>
+            </div>
+            <div class="counter-footer">
+                <div>Total Counted: <b id="totalCounted">₹0</b></div>
+                <div id="diffStatus" class="diff-status">Difference: ₹0</div>
             </div>
         </div>
 
