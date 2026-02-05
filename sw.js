@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hisab-manager-v5';
+const CACHE_NAME = 'hisab-manager-v6';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -6,6 +6,7 @@ const ASSETS_TO_CACHE = [
     './history.html',
     './profile.html',
     './box.html',
+    './secret_history.html',
     './css/base.css',
     './css/login.css',
     './css/navbar.css',
@@ -13,12 +14,14 @@ const ASSETS_TO_CACHE = [
     './css/history.css',
     './css/profile.css',
     './css/box.css',
+    './css/secret_history.css',
     './js/config.js',
     './js/auth.js',
     './js/dashboard.js',
     './js/history.js',
     './js/profile.js',
     './js/box.js',
+    './js/secret_history.js',
     './js/share-image.js',
     'https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css',
     'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',

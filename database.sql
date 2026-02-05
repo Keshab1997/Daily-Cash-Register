@@ -34,6 +34,7 @@ create table if not exists secret_box (
   user_id uuid references auth.users not null,
   t_date date not null,
   t_type text not null,
+  party_name text,
   description text,
   amount numeric default 0
 );
@@ -52,4 +53,5 @@ create policy if not exists "Users can delete own transactions" on transactions 
 
 create policy if not exists "Users can view own secret data" on secret_box for select using (auth.uid() = user_id);
 create policy if not exists "Users can insert own secret data" on secret_box for insert with check (auth.uid() = user_id);
+create policy if not exists "Users can update own secret data" on secret_box for update using (auth.uid() = user_id);
 create policy if not exists "Users can delete own secret data" on secret_box for delete using (auth.uid() = user_id);
