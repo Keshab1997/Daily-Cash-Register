@@ -16,25 +16,43 @@ const getISTDate = () => {
 window.onload = async () => {
     const session = await checkAuth(true);
     currentUser = session.user;
+
+    const istToday = getISTDate();
+    const today = new Date(istToday);
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+
+    document.getElementById('endDate').value = istToday;
+    document.getElementById('startDate').value = thirtyDaysAgo.toLocaleDateString('en-CA');
+
     await fetchHistory();
 };
 
 async function fetchHistory() {
     const loading = document.getElementById('loading');
     loading.style.display = 'block';
-    
+
+    const start = document.getElementById('startDate').value;
+    const end = document.getElementById('endDate').value;
+
+    if (!start || !end) {
+        loading.style.display = 'none';
+        return showToast("Please select both dates", 'error');
+    }
+
     const { data, error } = await _supabase.from('secret_box')
         .select('*')
         .eq('user_id', currentUser.id)
+        .gte('t_date', start)
+        .lte('t_date', end)
         .order('t_date', { ascending: false })
         .order('created_at', { ascending: false });
-    
+
     loading.style.display = 'none';
-    
+
     if (!error) {
         allData = data || [];
-        filteredData = allData;
-        renderTable(allData);
+        applyFilters();
     } else {
         showToast("Failed to load data", 'error');
     }
@@ -82,15 +100,13 @@ function renderTable(data) {
 }
 
 function applyFilters() {
-    const date = document.getElementById('filterDate').value;
     const name = document.getElementById('filterName').value.toLowerCase();
     const purpose = document.getElementById('filterPurpose').value.toLowerCase();
     
     filteredData = allData.filter(item => {
-        const matchDate = !date || item.t_date === date;
         const matchName = !name || (item.party_name && item.party_name.toLowerCase().includes(name));
         const matchPurpose = !purpose || item.description.toLowerCase().includes(purpose);
-        return matchDate && matchName && matchPurpose;
+        return matchName && matchPurpose;
     });
     
     renderTable(filteredData);
@@ -177,12 +193,15 @@ function downloadSecretPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     let y = 15;
+    
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
 
     doc.setFontSize(18);
     doc.text("Secret Box Report", 14, y);
     y += 8;
     doc.setFontSize(10);
-    doc.text(`Report Date: ${getISTDate()}`, 14, y);
+    doc.text(`Date Range: ${startDate} to ${endDate}`, 14, y);
     y += 10;
 
     const summary = {};
@@ -207,10 +226,10 @@ function downloadSecretPDF() {
             let displayAmount = Math.abs(data.net).toFixed(2);
             
             if (data.net > 0) {
-                status = 'Owner will pay (Owner owes)';
+                status = 'Owner will pay';
                 displayAmount = `+ Rs.${displayAmount}`;
             } else if (data.net < 0) {
-                status = 'Party will pay (Party owes)';
+                status = 'Party will pay';
                 displayAmount = `- Rs.${displayAmount}`;
             } else {
                 status = 'Settled';
