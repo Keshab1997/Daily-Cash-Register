@@ -16,7 +16,10 @@ async function login() {
     const pass = document.getElementById('password').value;
     const btn = document.querySelector('#loginForm button');
 
-    if(!email || !pass) return alert("Please enter email and password");
+    if(!email || !pass) {
+        showToast("Please enter email and password", 'error');
+        return;
+    }
 
     btn.innerHTML = "Logging in...";
     btn.disabled = true;
@@ -26,7 +29,7 @@ async function login() {
     });
 
     if (error) {
-        alert("Login failed: " + error.message);
+        showToast("Login failed: " + error.message, 'error');
         btn.innerHTML = "Login";
         btn.disabled = false;
     } else {
@@ -39,8 +42,14 @@ async function signup() {
     const pass = document.getElementById('regPassword').value;
     const btn = document.querySelector('#signupForm button');
 
-    if(!email || !pass) return alert("Please fill all fields");
-    if(pass.length < 6) return alert("Password must be at least 6 characters");
+    if(!email || !pass) {
+        showToast("Please fill all fields", 'error');
+        return;
+    }
+    if(pass.length < 6) {
+        showToast("Password must be at least 6 characters", 'error');
+        return;
+    }
 
     btn.innerHTML = "Creating account...";
     btn.disabled = true;
@@ -50,13 +59,14 @@ async function signup() {
     });
 
     if (error) {
-        alert("Error: " + error.message);
+        showToast("Error: " + error.message, 'error');
         btn.innerHTML = "Sign Up";
         btn.disabled = false;
     } else {
         document.getElementById('signupForm').classList.add('hidden');
         document.getElementById('verifyMsg').classList.remove('hidden');
         document.getElementById('sentEmail').innerText = email;
+        showToast("Account created! Check your email.", 'success');
     }
 }
 

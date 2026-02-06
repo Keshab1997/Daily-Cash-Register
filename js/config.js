@@ -14,3 +14,28 @@ async function checkAuth(required = true) {
     }
     return session;
 }
+
+function showToast(message, type = 'info') {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    let icon = '';
+    if (type === 'success') icon = 'ri-checkbox-circle-fill';
+    else if (type === 'error') icon = 'ri-close-circle-fill';
+    else icon = 'ri-information-fill';
+
+    toast.innerHTML = `<i class="${icon}"></i> <span>${message}</span>`;
+    
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 4000);
+}

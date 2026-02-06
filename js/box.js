@@ -156,7 +156,7 @@ const purpose = document.getElementById('sPurpose').value.trim();
 const amount = parseFloat(document.getElementById('sAmount').value);
 
 if (!date || !name || !purpose || !amount || amount <= 0) {
-    return alert("Please fill all fields correctly.");
+    return showToast("Please fill all fields correctly.", 'error');
 }
 
 const payload = {
@@ -173,10 +173,11 @@ if (!error) {
     document.getElementById('sName').value = '';
     document.getElementById('sPurpose').value = '';
     document.getElementById('sAmount').value = '';
+    showToast(`Transaction (${type}) saved!`, 'success');
     await loadAllData();
     await loadSuggestions();
 } else {
-    alert("Error: " + error.message);
+    showToast("Error: " + error.message, 'error');
 }
 }
 
