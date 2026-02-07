@@ -8,6 +8,47 @@
 .date-group, .opening-group { flex: 1; min-width: 200px; }
 .label-text { display: block; font-size: 0.85rem; color: var(--text-light); margin-bottom: 5px; font-weight: 500; }
 
+/* Calendar Picker Styling */
+input[type="date"] {
+    color: #1f2937 !important;
+    color-scheme: light !important;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background: white;
+    position: relative;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+    background: transparent;
+    bottom: 0;
+    color: transparent;
+    cursor: pointer;
+    height: auto;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: auto;
+    filter: invert(0.5);
+}
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    color: #1f2937 !important;
+}
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+    color: #1f2937 !important;
+    background: transparent !important;
+}
+
+/* Force light theme for date picker dialog */
+@media (prefers-color-scheme: dark) {
+    input[type="date"] {
+        color-scheme: light !important;
+    }
+}
+
 .entry-grid { 
     display: grid; 
     grid-template-columns: 1fr 1fr;
@@ -136,5 +177,8 @@
         flex: 1; 
         padding: 15px; 
         font-size: 1.5rem;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(0) brightness(0.5);
     }
 }

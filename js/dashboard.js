@@ -131,6 +131,23 @@ async function fetchOpeningBalance() {
     const selectedDate = document.getElementById('date').value;
     const openingInput = document.getElementById('opening');
     
+    // Check if already saved for this date
+    const { data: savedDay } = await _supabase.from('daily_accounts')
+        .select('opening_balance')
+        .eq('user_id', currentUser.id)
+        .eq('report_date', selectedDate)
+        .limit(1);
+    
+    // If already saved, use that opening balance
+    if (savedDay && savedDay.length > 0) {
+        openingInput.value = savedDay[0].opening_balance;
+        openingInput.style.background = '#fef3c7';
+        setTimeout(() => openingInput.style.background = '', 1000);
+        updateSummary();
+        return;
+    }
+    
+    // Otherwise calculate from previous day
     const { data: lastSavedDay } = await _supabase.from('daily_accounts')
         .select('report_date, petty_cash')
         .eq('user_id', currentUser.id)
@@ -163,7 +180,6 @@ async function fetchOpeningBalance() {
     const finalOpening = baseBalance + adjustment;
     openingInput.value = finalOpening;
     
-    // Visual feedback
     if (finalOpening > 0) {
         openingInput.style.background = '#d1fae5';
         setTimeout(() => openingInput.style.background = '', 1000);
@@ -283,6 +299,14 @@ function updateSummary() {
     document.getElementById('offBal').innerText = formatCurrency(final);
     calcDenom();
 }
+
+// Add event listener for manual opening balance change
+window.addEventListener('DOMContentLoaded', () => {
+    const openingInput = document.getElementById('opening');
+    if (openingInput) {
+        openingInput.addEventListener('input', updateSummary);
+    }
+});
 
 async function saveDayEnd() {
     const date = document.getElementById('date').value;

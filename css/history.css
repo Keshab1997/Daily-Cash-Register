@@ -18,6 +18,14 @@
 .date-range input { flex: 1; }
 .to-text { font-weight: 600; color: var(--text-light); }
 
+@media (max-width: 768px) {
+    .date-range { 
+        flex-direction: column; 
+        gap: 10px;
+    }
+    .to-text { display: none; }
+}
+
 .search-filters { display: flex; gap: 10px; }
 .search-filters select { flex: 1; cursor: pointer; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: white; }
 
@@ -104,12 +112,103 @@ input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-colo
 .t-red { color: var(--danger); }
 .no-data { text-align: center; padding: 30px; color: var(--text-light); display: none; }
 
-@media (max-width: 600px) {
+/* Mobile Premium Card Design */
+@media (max-width: 768px) {
     .search-filters { flex-direction: column; }
-    .action-bar { flex-direction: column; gap: 10px; align-items: flex-start; }
+    .action-bar { flex-direction: column; gap: 10px; align-items: stretch; }
+    
+    .table-container {
+        border: none;
+        background: transparent;
+        overflow: visible;
+    }
+    
+    table { 
+        display: block; 
+        min-width: 100%; 
+    }
+    
     thead { display: none; }
-    tr { display: block; border: 1px solid var(--border); margin-bottom: 10px; border-radius: 8px; padding: 10px; background: white; position: relative; padding-left: 40px; }
-    td:first-child { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); border: none; padding: 0; }
-    td { display: flex; justify-content: space-between; padding: 5px 0; border: none; }
-    td::before { content: attr(data-label); font-weight: 600; color: var(--text-light); font-size: 0.85rem; }
+    tbody { display: block; }
+    
+    tr { 
+        display: block;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        margin-bottom: 20px;
+        padding: 0;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+        position: relative;
+    }
+    
+    td { 
+        display: grid;
+        grid-template-columns: 100px 1fr;
+        gap: 12px;
+        padding: 14px 16px;
+        border: none;
+        border-bottom: 1px solid #f1f5f9;
+        align-items: center;
+    }
+    
+    td:first-child {
+        position: absolute;
+        left: 16px;
+        top: 16px;
+        padding: 0;
+        border: none;
+        z-index: 10;
+        display: block;
+        grid-template-columns: 1fr;
+    }
+    
+    td:first-child::before {
+        display: none;
+    }
+    
+    td:nth-child(2) {
+        background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+        color: white;
+        padding: 16px 16px 16px 50px;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+    }
+    
+    td:nth-child(2)::before {
+        background: rgba(255,255,255,0.2);
+        color: white;
+    }
+    
+    td:last-child {
+        background: #f8fafc;
+        border-bottom: none;
+        border-bottom-left-radius: 16px;
+        border-bottom-right-radius: 16px;
+    }
+    
+    td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: #475569;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        padding: 8px 10px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    
+    .badge {
+        padding: 6px 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .amount-cell {
+        font-size: 1.2rem;
+        font-weight: 800;
+    }
 }
