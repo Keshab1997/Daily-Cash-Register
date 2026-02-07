@@ -41,6 +41,9 @@ async function fetchHistory() {
         return showToast("Please select both dates", 'error');
     }
 
+    allData = [];
+    filteredData = [];
+
     const { data, error } = await _supabase.from('secret_box')
         .select('*')
         .eq('user_id', currentUser.id)
@@ -91,9 +94,10 @@ function renderSummaryView(data) {
         }
         
         if (item.t_type === 'TAKE') {
-            personBalance[name] += parseFloat(item.amount);
-        } else {
-            personBalance[name] -= parseFloat(item.amount);
+            const remaining = parseFloat(item.remaining_amount);
+            if (!isNaN(remaining)) {
+                personBalance[name] += remaining;
+            }
         }
         
         if (item.t_date > personLastDate[name]) {
@@ -102,31 +106,25 @@ function renderSummaryView(data) {
     });
     
     const personList = Object.entries(personBalance)
-        .filter(([_, balance]) => Math.abs(balance) > 0.01)
-        .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+        .filter(([_, balance]) => balance > 0.01)
+        .sort((a, b) => b[1] - a[1]);
     
     if (personList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#10b981;">✅ All Settled!</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px 20px; color:#10b981; font-size:1.2rem; font-weight:700;">✅ All Settled!</td></tr>';
         return;
     }
     
     personList.forEach(([name, balance]) => {
-        const isDue = balance > 0;
-        const badgeClass = isDue ? 'badge-take' : 'badge-return';
-        const amountColor = isDue ? '#ef4444' : '#10b981';
-        const sign = isDue ? '' : '+';
-        const label = isDue ? 'DUE' : 'ADVANCE';
-        
         const tr = `
             <tr>
-                <td>${personLastDate[name]}</td>
-                <td><strong>${name}</strong></td>
-                <td>${personPurpose[name]}</td>
-                <td><span class="badge ${badgeClass}">${label}</span></td>
-                <td class="amount-cell" style="color:${amountColor}; font-weight:700;">
-                    ${sign}${formatCurrency(Math.abs(balance))}
+                <td data-label="Date">${personLastDate[name]}</td>
+                <td data-label="Name"><strong>${name}</strong></td>
+                <td data-label="Purpose">${personPurpose[name]}</td>
+                <td data-label="Type"><span class="badge badge-take">DUE</span></td>
+                <td data-label="Amount" class="amount-cell" style="color:#ef4444; font-weight:700;">
+                    ${formatCurrency(balance)}
                 </td>
-                <td style="text-align:center; color:#9ca3af;">—</td>
+                <td data-label="Action" style="text-align:center; color:#9ca3af;">—</td>
             </tr>
         `;
         tbody.innerHTML += tr;
@@ -140,28 +138,34 @@ function renderDetailedView(data) {
         const isTake = row.t_type === 'TAKE';
         const badgeClass = isTake ? 'badge-take' : 'badge-return';
         const amountColor = isTake ? '#ef4444' : '#10b981';
+        const remaining = parseFloat(row.remaining_amount || 0);
         
         let actionHtml = '';
-        if (isTake) {
+        
+        if (isTake && remaining > 0) {
             actionHtml = `
                 <div class="return-wrapper">
-                    <input type="number" class="return-input" id="ret_${row.id}" placeholder="Return ₹" onkeydown="checkEnter(event, ${row.id}, '${row.party_name}', '${row.description}')">
-                    <button class="btn-quick-return" onclick="quickReturn(${row.id}, '${row.party_name}', '${row.description}')">OK</button>
+                    <input type="number" class="return-input" id="ret_${row.id}" placeholder="Max ₹${remaining.toFixed(0)}" max="${remaining}" onkeydown="checkEnter(event, ${row.id})">
+                    <button class="btn-quick-return" onclick="quickReturnFromEntry(${row.id})">OK</button>
                     <i class="ri-delete-bin-line btn-delete" onclick="deleteEntry(${row.id})"></i>
                 </div>
             `;
+        } else if (isTake && remaining <= 0) {
+            actionHtml = `<span style="color:#10b981; font-weight:600;">✅ Settled</span> <i class="ri-delete-bin-line btn-delete" onclick="deleteEntry(${row.id})"></i>`;
         } else {
-            actionHtml = `<i class="ri-delete-bin-line btn-delete" onclick="deleteEntry(${row.id})"></i>`;
+            actionHtml = `<span style="color:#9ca3af; font-size:0.85rem;">Return entry</span>`;
         }
+        
+        const displayAmount = isTake ? `₹${row.amount} (₹${remaining} left)` : `₹${row.amount}`;
         
         const tr = `
             <tr>
-                <td contenteditable="true" class="editable" onblur="updateEntry(${row.id}, 't_date', this.innerText)">${row.t_date}</td>
-                <td contenteditable="true" class="editable" onblur="updateEntry(${row.id}, 'party_name', this.innerText)">${row.party_name || ''}</td>
-                <td contenteditable="true" class="editable" onblur="updateEntry(${row.id}, 'description', this.innerText)">${row.description}</td>
-                <td><span class="badge ${badgeClass}">${row.t_type}</span></td>
-                <td contenteditable="true" class="editable amount-cell" style="color:${amountColor}" onblur="updateEntry(${row.id}, 'amount', this.innerText)">${row.amount}</td>
-                <td>${actionHtml}</td>
+                <td data-label="Date" contenteditable="true" class="editable" onblur="updateEntry(${row.id}, 't_date', this.innerText)">${row.t_date}</td>
+                <td data-label="Name" contenteditable="true" class="editable" onblur="updateEntry(${row.id}, 'party_name', this.innerText)">${row.party_name || ''}</td>
+                <td data-label="Purpose" contenteditable="true" class="editable" onblur="updateEntry(${row.id}, 'description', this.innerText)">${row.description}</td>
+                <td data-label="Type"><span class="badge ${badgeClass}">${row.t_type}</span></td>
+                <td data-label="Amount" class="amount-cell" style="color:${amountColor}">${displayAmount}</td>
+                <td data-label="Action">${actionHtml}</td>
             </tr>
         `;
         tbody.innerHTML += tr;
@@ -219,9 +223,21 @@ async function updateEntry(id, field, value) {
     }
 }
 
-function checkEnter(e, id, name, desc) {
+function checkEnter(e, id) {
     if (e.key === 'Enter') {
-        quickReturn(id, name, desc);
+        quickReturnFromEntry(id);
+    }
+}
+
+async function quickReturnFromEntry(id) {
+    const entry = allData.find(d => d.id === id);
+    if (!entry) {
+        await fetchHistory();
+        const freshEntry = allData.find(d => d.id === id);
+        if (!freshEntry) return;
+        await quickReturn(id, freshEntry.party_name, freshEntry.description);
+    } else {
+        await quickReturn(id, entry.party_name, entry.description);
     }
 }
 
@@ -229,26 +245,42 @@ async function quickReturn(id, name, desc) {
     const input = document.getElementById(`ret_${id}`);
     const amount = parseFloat(input.value);
     
-    if (!amount || amount <= 0) return showToast("Enter valid return amount", 'error');
-    
-    const payload = {
-        user_id: currentUser.id,
-        t_date: getISTDate(),
-        t_type: 'RETURN',
-        party_name: name,
-        description: desc,
-        amount: amount
-    };
-    
-    const { error } = await _supabase.from('secret_box').insert(payload);
-    
-    if (!error) {
-        showToast(`✅ ₹${amount} Returned successfully!`, 'success');
-        input.value = '';
-        await fetchHistory();
-    } else {
-        showToast("Error: " + error.message, 'error');
+    if (!amount || amount <= 0) {
+        return alert("Enter valid return amount");
     }
+    
+    // Get the specific entry that user clicked on
+    const { data: clickedEntry, error: fetchError } = await _supabase
+        .from('secret_box')
+        .select('*')
+        .eq('id', id)
+        .single();
+    
+    if (fetchError || !clickedEntry) {
+        return alert("Error fetching entry");
+    }
+    
+    const currentRemaining = parseFloat(clickedEntry.remaining_amount || clickedEntry.amount);
+    
+    if (amount > currentRemaining) {
+        return alert(`❌ Cannot return ₹${amount}!\n\nThis entry has: ₹${currentRemaining.toFixed(2)}\nYou can only return up to ₹${currentRemaining.toFixed(2)}`);
+    }
+    
+    // Update only this specific entry
+    const newRemaining = currentRemaining - amount;
+    
+    const { error: updateError } = await _supabase
+        .from('secret_box')
+        .update({ remaining_amount: newRemaining })
+        .eq('id', id);
+    
+    if (updateError) {
+        return alert('Update failed: ' + updateError.message);
+    }
+    
+    alert(`✅ ₹${amount} returned successfully!`);
+    input.value = '';
+    await fetchHistory();
 }
 
 async function deleteEntry(id) {
@@ -282,91 +314,63 @@ function downloadSecretPDF() {
     doc.text(`Date Range: ${startDate} to ${endDate}`, 14, y);
     y += 10;
 
+    // Calculate net balance using remaining_amount
     const summary = {};
     filteredData.forEach(item => {
         const name = item.party_name || 'Unknown';
-        const amt = parseFloat(item.amount) || 0;
         if (!summary[name]) summary[name] = { net: 0, taken: 0, returned: 0 };
         
+        const amt = parseFloat(item.amount) || 0;
+        
         if (item.t_type === 'TAKE') {
-            summary[name].net += amt;
+            const remaining = parseFloat(item.remaining_amount) || 0;
+            summary[name].net += remaining;
             summary[name].taken += amt;
         } else {
-            summary[name].net -= amt;
             summary[name].returned += amt;
         }
     });
 
+    // Filter only entries with remaining balance
     const summaryRows = Object.entries(summary)
+        .filter(([_, data]) => data.net > 0.01)
         .sort((a, b) => b[1].net - a[1].net)
-        .map(([name, data]) => {
-            let status = '';
-            let displayAmount = Math.abs(data.net).toFixed(2);
-            
-            if (data.net > 0) {
-                status = 'Owner will pay';
-                displayAmount = `+ Rs.${displayAmount}`;
-            } else if (data.net < 0) {
-                status = 'Party will pay';
-                displayAmount = `- Rs.${displayAmount}`;
-            } else {
-                status = 'Settled';
-                displayAmount = `Rs.0.00`;
+        .map(([name, data]) => [
+            name, 
+            `Rs.${data.taken.toFixed(2)}`, 
+            `Rs.${data.returned.toFixed(2)}`, 
+            `Rs.${data.net.toFixed(2)}`,
+            'Owner will pay'
+        ]);
+
+    if (summaryRows.length === 0) {
+        doc.setFontSize(16);
+        doc.setTextColor(16, 185, 129);
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const text = "✅ All Settled! No pending dues.";
+        const textWidth = doc.getTextWidth(text);
+        const x = (pageWidth - textWidth) / 2;
+        doc.text(text, x, y + 30);
+    } else {
+        doc.setFontSize(12);
+        doc.text("Net Balance Summary (Pending Dues Only)", 14, y);
+        y += 5;
+
+        doc.autoTable({
+            startY: y,
+            head: [['Name', 'Total Taken', 'Total Returned', 'Net Balance', 'Status']],
+            body: summaryRows,
+            theme: 'grid',
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' },
+            columnStyles: {
+                1: { halign: 'right' },
+                2: { halign: 'right' },
+                3: { halign: 'right', fontStyle: 'bold', textColor: [239, 68, 68] }
             }
-            
-            return [
-                name, 
-                `Rs.${data.taken.toFixed(2)}`, 
-                `Rs.${data.returned.toFixed(2)}`, 
-                displayAmount, 
-                status
-            ];
         });
+    }
 
-    doc.setFontSize(12);
-    doc.text("A. Person-wise Net Balance Summary", 14, y);
-    y += 5;
-
-    doc.autoTable({
-        startY: y,
-        head: [['Name', 'Total Taken', 'Total Returned', 'Net Amount', 'Who Will Pay']],
-        body: summaryRows,
-        theme: 'grid',
-        styles: { fontSize: 9, cellPadding: 3 },
-        headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' },
-        columnStyles: {
-            1: { halign: 'right' },
-            2: { halign: 'right' },
-            3: { halign: 'right', fontStyle: 'bold' }
-        }
-    });
-
-    y = doc.autoTable.previous.finalY + 10;
-
-    doc.setFontSize(12);
-    doc.text("B. Detailed Transaction History", 14, y);
-    y += 5;
-
-    const detailRows = filteredData.map(row => [
-        row.t_date,
-        row.party_name,
-        row.description,
-        row.t_type === 'TAKE' ? 'TAKEN (Loan)' : 'RETURNED (Deposit)',
-        (row.t_type === 'TAKE' ? '-' : '+') + ' Rs.' + parseFloat(row.amount).toFixed(2)
-    ]);
-
-    doc.autoTable({
-        startY: y,
-        head: [['Date', 'Name', 'Purpose', 'Transaction Type', 'Amount']],
-        body: detailRows,
-        theme: 'striped',
-        styles: { fontSize: 9, cellPadding: 2 },
-        headStyles: { fillColor: [239, 68, 68], textColor: 255, fontStyle: 'bold' },
-        columnStyles: {
-            4: { halign: 'right' }
-        }
-    });
-
-    doc.save('Secret_History_Report.pdf');
+    doc.save('Secret_Balance_Report.pdf');
     showToast("PDF downloaded successfully!", 'success');
 }

@@ -36,7 +36,8 @@ create table if not exists secret_box (
   t_type text not null,
   party_name text,
   description text,
-  amount numeric default 0
+  amount numeric default 0,
+  remaining_amount numeric default 0
 );
 
 alter table secret_box enable row level security;

@@ -68,7 +68,7 @@ const { data, error } = await _supabase.from('secret_box')
 
 if (!error) {
     allSecretData = data || [];
-    renderSecretList(allSecretData.slice(0, 5)); // Show only top 5
+    renderSecretList(allSecretData.slice(0, 5));
     calculateCards();
 }
 }
@@ -84,7 +84,6 @@ if (data.length === 0) {
 }
 noData.style.display = 'none';
 
-// Group by person and calculate net balance
 const personBalance = {};
 const personLastDate = {};
 const personPurpose = {};
@@ -98,21 +97,20 @@ data.forEach(item => {
     }
     
     if (item.t_type === 'TAKE') {
-        personBalance[name] += item.amount;
-    } else {
-        personBalance[name] -= item.amount;
+        const rem = parseFloat(item.remaining_amount);
+        if (!isNaN(rem)) {
+            personBalance[name] += rem;
+        }
     }
     
-    // Keep latest date
     if (item.t_date > personLastDate[name]) {
         personLastDate[name] = item.t_date;
     }
 });
 
-// Convert to array and filter out zero balances
 const personList = Object.entries(personBalance)
-    .filter(([_, balance]) => Math.abs(balance) > 0.01)
-    .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+    .filter(([_, balance]) => balance > 0.01)
+    .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
 if (personList.length === 0) {
@@ -121,12 +119,6 @@ if (personList.length === 0) {
 }
 
 personList.forEach(([name, balance]) => {
-    const isDue = balance > 0;
-    const typeLabel = isDue ? 'DUE' : 'ADVANCE';
-    const typeClass = isDue ? 'type-take' : 'type-return';
-    const amountColor = isDue ? '#ef4444' : '#10b981';
-    const sign = isDue ? '' : '+';
-
     const li = `
         <li>
             <div class="li-left">
@@ -137,10 +129,10 @@ personList.forEach(([name, balance]) => {
                 <span class="li-date">${personLastDate[name]}</span>
             </div>
             <div class="li-right">
-                <span class="li-amount" style="color: ${amountColor}">
-                    ${sign}${formatCurrency(Math.abs(balance))}
+                <span class="li-amount" style="color: #ef4444">
+                    ${formatCurrency(balance)}
                 </span>
-                <span class="li-type ${typeClass}">${typeLabel}</span>
+                <span class="li-type type-take">DUE</span>
             </div>
         </li>
     `;
@@ -151,8 +143,12 @@ personList.forEach(([name, balance]) => {
 function calculateCards() {
 let totalDue = 0;
 allSecretData.forEach(item => {
-if (item.t_type === 'TAKE') totalDue += item.amount;
-else totalDue -= item.amount;
+if (item.t_type === 'TAKE') {
+    const rem = parseFloat(item.remaining_amount);
+    if (!isNaN(rem)) {
+        totalDue += rem;
+    }
+}
 });
 
 document.getElementById('dueBal').innerText = formatCurrency(totalDue);
@@ -192,29 +188,70 @@ const purpose = document.getElementById('sPurpose').value.trim();
 const amount = parseFloat(document.getElementById('sAmount').value);
 
 if (!date || !name || !purpose || !amount || amount <= 0) {
-    return showToast("Please fill all fields correctly.", 'error');
+    return alert("Please fill all fields correctly.");
 }
 
-const payload = {
-    user_id: currentUser.id,
-    t_date: date,
-    t_type: type,
-    party_name: name,
-    description: purpose,
-    amount: amount
-};
-
-const { error } = await _supabase.from('secret_box').insert(payload);
-if (!error) {
-    document.getElementById('sName').value = '';
-    document.getElementById('sPurpose').value = '';
-    document.getElementById('sAmount').value = '';
-    showToast(`Transaction (${type}) saved!`, 'success');
-    await loadAllData();
-    await loadSuggestions();
+if (type === 'RETURN') {
+    const { data: personData } = await _supabase.from('secret_box')
+        .select('id, amount, t_type, remaining_amount, created_at')
+        .eq('user_id', currentUser.id)
+        .eq('party_name', name)
+        .order('created_at', { ascending: true });
+    
+    let currentBalance = 0;
+    if (personData) {
+        personData.forEach(item => {
+            if (item.t_type === 'TAKE') {
+                currentBalance += parseFloat(item.remaining_amount || item.amount);
+            }
+        });
+    }
+    
+    if (amount > currentBalance) {
+        return alert(`❌ Cannot return ₹${amount}!\n\nCurrent due: ₹${currentBalance.toFixed(2)}\nYou can only return up to ₹${currentBalance.toFixed(2)}`);
+    }
+    
+    let remainingReturn = amount;
+    const takeEntries = personData.filter(item => item.t_type === 'TAKE' && parseFloat(item.remaining_amount || item.amount) > 0)
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    
+    for (const entry of takeEntries) {
+        if (remainingReturn <= 0) break;
+        
+        const entryRemaining = parseFloat(entry.remaining_amount || entry.amount);
+        const deduction = Math.min(remainingReturn, entryRemaining);
+        const newRemaining = entryRemaining - deduction;
+        
+        const { error } = await _supabase.from('secret_box')
+            .update({ remaining_amount: newRemaining })
+            .eq('id', entry.id);
+        
+        if (error) return alert("Error: " + error.message);
+        
+        remainingReturn -= deduction;
+    }
+    
+    alert(`✅ ₹${amount} returned successfully!`);
 } else {
-    showToast("Error: " + error.message, 'error');
+    const payload = {
+        user_id: currentUser.id,
+        t_date: date,
+        t_type: type,
+        party_name: name,
+        description: purpose,
+        amount: amount,
+        remaining_amount: amount
+    };
+    
+    const { error } = await _supabase.from('secret_box').insert(payload);
+    if (error) return alert("Error: " + error.message);
 }
+
+document.getElementById('sName').value = '';
+document.getElementById('sPurpose').value = '';
+document.getElementById('sAmount').value = '';
+await loadAllData();
+await loadSuggestions();
 }
 
 // --- Due Summary Logic ---
@@ -225,7 +262,6 @@ function showDueSummary() {
     
     modal.style.display = 'flex';
     
-    // Group data by Name
     const summary = {};
     
     allSecretData.forEach(item => {
@@ -233,45 +269,30 @@ function showDueSummary() {
         if (!summary[name]) summary[name] = 0;
         
         if (item.t_type === 'TAKE') {
-            summary[name] += item.amount; // Due increases
-        } else {
-            summary[name] -= item.amount; // Due decreases
+            const rem = parseFloat(item.remaining_amount);
+            if (!isNaN(rem)) {
+                summary[name] += rem;
+            }
         }
     });
 
-    // Convert to array and sort
     const sortedList = Object.entries(summary)
-        .sort((a, b) => b[1] - a[1]); // বেশি বাকি আগে দেখাবে
+        .filter(([_, amount]) => amount > 0.01)
+        .sort((a, b) => b[1] - a[1]);
 
     tbody.innerHTML = '';
     
     if (sortedList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:20px; color:#9ca3af;">No records found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:20px; color:#10b981;">✅ All Settled!</td></tr>';
         return;
     }
 
     sortedList.forEach(([name, amount]) => {
-        let colorClass = 'due-zero';
-        let sign = '';
-        let label = '';
-        
-        if (amount > 0) {
-            colorClass = 'due-positive';
-            sign = '+';
-            label = ' (Due)';
-        } else if (amount < 0) {
-            colorClass = 'due-negative';
-            sign = '';
-            label = ' (Advance)';
-        } else {
-            label = ' (Settled)';
-        }
-
         const tr = `
             <tr>
                 <td>${name}</td>
-                <td class="${colorClass}" style="text-align: right;">
-                    ${sign}${formatCurrency(Math.abs(amount))}${label}
+                <td class="due-positive" style="text-align: right;">
+                    ${formatCurrency(amount)} (Due)
                 </td>
             </tr>
         `;

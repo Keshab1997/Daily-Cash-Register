@@ -15,6 +15,7 @@ Daily-Cash-Register/
 ├── secret_history.html     (Secret History Page) 🆕
 ├── database.sql            (Supabase Database Setup)
 ├── migration_secret_box.sql (Migration for existing DB) 🆕
+├── migration_remaining_amount.sql (Fix remaining balance) 🆕
 │
 ├── css/
 │   ├── base.css            (Common Fonts & Reset)
@@ -48,6 +49,8 @@ Daily-Cash-Register/
 #### পুরানো প্রজেক্ট আপডেট করতে:
 1. SQL Editor এ গিয়ে `migration_secret_box.sql` ফাইলের কোড রান করুন
 2. এটি secret_box টেবিলে `party_name` কলাম যোগ করবে
+3. যদি আগে থেকে ডাটা থাকে, তাহলে `migration_remaining_amount.sql` রান করুন
+4. এটি পুরানো ডাটার জন্য সঠিক `remaining_amount` হিসাব করবে
 
 ### ধাপ ২: Supabase Credentials যুক্ত করুন
 
@@ -83,7 +86,12 @@ Daily-Cash-Register/
   - Physical Cash (আসল নগদ)
 - 👤 নাম ও উদ্দেশ্য সহ এন্ট্রি
 - 🔄 Auto-fill সাজেশন
-- ⚡ Quick Return ফিচার
+- ⚡ Smart Return System (স্মার্ট রিটার্ন সিস্টেম) 🔥
+  - ধার দিলে অটোমেটিক ট্র্যাক হয় (যেমন: ১০০০ টাকা)
+  - ফেরত দিলে বাকি টাকা কমে যায় (২০০ টাকা দিলে বাকি ৮০০)
+  - আবার ফেরত দিলে আরও কমে (৬০০ টাকা দিলে বাকি ২০০)
+  - সম্পূর্ণ ফেরত দিলে "Settled" দেখায়
+  - বেশি ফেরত দেওয়া যায় না (সুরক্ষা ব্যবস্থা)
 - ✏️ Inline Edit (সরাসরি এডিট)
 - 🔍 ফিল্টার ও সার্চ
 - 📊 সম্পূর্ণ হিস্ট্রি ভিউ
