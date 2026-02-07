@@ -1,6 +1,7 @@
 let currentUser = null;
 let allData = [];
 let filteredData = [];
+let currentView = 'summary';
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -67,6 +68,74 @@ function renderTable(data) {
         return;
     }
     
+    if (currentView === 'summary') {
+        renderSummaryView(data);
+    } else {
+        renderDetailedView(data);
+    }
+}
+
+function renderSummaryView(data) {
+    const tbody = document.getElementById('historyBody');
+    
+    const personBalance = {};
+    const personPurpose = {};
+    const personLastDate = {};
+    
+    data.forEach(item => {
+        const name = item.party_name || 'Unknown';
+        if (!personBalance[name]) {
+            personBalance[name] = 0;
+            personPurpose[name] = item.description;
+            personLastDate[name] = item.t_date;
+        }
+        
+        if (item.t_type === 'TAKE') {
+            personBalance[name] += parseFloat(item.amount);
+        } else {
+            personBalance[name] -= parseFloat(item.amount);
+        }
+        
+        if (item.t_date > personLastDate[name]) {
+            personLastDate[name] = item.t_date;
+        }
+    });
+    
+    const personList = Object.entries(personBalance)
+        .filter(([_, balance]) => Math.abs(balance) > 0.01)
+        .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+    
+    if (personList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#10b981;">✅ All Settled!</td></tr>';
+        return;
+    }
+    
+    personList.forEach(([name, balance]) => {
+        const isDue = balance > 0;
+        const badgeClass = isDue ? 'badge-take' : 'badge-return';
+        const amountColor = isDue ? '#ef4444' : '#10b981';
+        const sign = isDue ? '' : '+';
+        const label = isDue ? 'DUE' : 'ADVANCE';
+        
+        const tr = `
+            <tr>
+                <td>${personLastDate[name]}</td>
+                <td><strong>${name}</strong></td>
+                <td>${personPurpose[name]}</td>
+                <td><span class="badge ${badgeClass}">${label}</span></td>
+                <td class="amount-cell" style="color:${amountColor}; font-weight:700;">
+                    ${sign}${formatCurrency(Math.abs(balance))}
+                </td>
+                <td style="text-align:center; color:#9ca3af;">—</td>
+            </tr>
+        `;
+        tbody.innerHTML += tr;
+    });
+}
+
+function renderDetailedView(data) {
+    const tbody = document.getElementById('historyBody');
+    
     data.forEach(row => {
         const isTake = row.t_type === 'TAKE';
         const badgeClass = isTake ? 'badge-take' : 'badge-return';
@@ -97,6 +166,15 @@ function renderTable(data) {
         `;
         tbody.innerHTML += tr;
     });
+}
+
+function switchView(view) {
+    currentView = view;
+    
+    document.getElementById('btnDetailed').classList.toggle('active', view === 'detailed');
+    document.getElementById('btnSummary').classList.toggle('active', view === 'summary');
+    
+    renderTable(filteredData);
 }
 
 function applyFilters() {

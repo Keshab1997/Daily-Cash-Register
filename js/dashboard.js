@@ -129,8 +129,8 @@ function sendNotification(title, body) {
 
 async function fetchOpeningBalance() {
     const selectedDate = document.getElementById('date').value;
+    const openingInput = document.getElementById('opening');
     
-    // ১. শেষ কবে "Save Day End" করা হয়েছিল সেই ডাটা নিচ্ছি
     const { data: lastSavedDay } = await _supabase.from('daily_accounts')
         .select('report_date, petty_cash')
         .eq('user_id', currentUser.id)
@@ -139,14 +139,13 @@ async function fetchOpeningBalance() {
         .limit(1);
 
     let baseBalance = 0;
-    let lastSavedDate = '1900-01-01'; // যদি কোনোদিন সেভ না করা হয়
+    let lastSavedDate = '1900-01-01';
 
     if (lastSavedDay && lastSavedDay.length > 0) {
         baseBalance = lastSavedDay[0].petty_cash;
         lastSavedDate = lastSavedDay[0].report_date;
     }
 
-    // ২. শেষ সেভ করা দিন থেকে আজ পর্যন্ত যত ট্রানজেকশন হয়েছে (যা সেভ করা হয়নি) সেগুলো ক্যালকুলেট করা
     const { data: pendingTrans } = await _supabase.from('transactions')
         .select('amount, t_type')
         .eq('user_id', currentUser.id)
@@ -162,7 +161,14 @@ async function fetchOpeningBalance() {
     }
 
     const finalOpening = baseBalance + adjustment;
-    document.getElementById('opening').value = finalOpening;
+    openingInput.value = finalOpening;
+    
+    // Visual feedback
+    if (finalOpening > 0) {
+        openingInput.style.background = '#d1fae5';
+        setTimeout(() => openingInput.style.background = '', 1000);
+    }
+    
     updateSummary();
 }
 

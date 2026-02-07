@@ -84,25 +84,61 @@ if (data.length === 0) {
 }
 noData.style.display = 'none';
 
+// Group by person and calculate net balance
+const personBalance = {};
+const personLastDate = {};
+const personPurpose = {};
+
 data.forEach(item => {
-    const isTake = item.t_type === 'TAKE';
-    const typeLabel = isTake ? 'TAKEN' : 'RETURNED';
-    const typeClass = isTake ? 'type-take' : 'type-return';
-    const amountColor = isTake ? '#ef4444' : '#10b981';
     const name = item.party_name || 'Unknown';
+    if (!personBalance[name]) {
+        personBalance[name] = 0;
+        personLastDate[name] = item.t_date;
+        personPurpose[name] = item.description;
+    }
+    
+    if (item.t_type === 'TAKE') {
+        personBalance[name] += item.amount;
+    } else {
+        personBalance[name] -= item.amount;
+    }
+    
+    // Keep latest date
+    if (item.t_date > personLastDate[name]) {
+        personLastDate[name] = item.t_date;
+    }
+});
+
+// Convert to array and filter out zero balances
+const personList = Object.entries(personBalance)
+    .filter(([_, balance]) => Math.abs(balance) > 0.01)
+    .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+    .slice(0, 5);
+
+if (personList.length === 0) {
+    noData.style.display = 'block';
+    return;
+}
+
+personList.forEach(([name, balance]) => {
+    const isDue = balance > 0;
+    const typeLabel = isDue ? 'DUE' : 'ADVANCE';
+    const typeClass = isDue ? 'type-take' : 'type-return';
+    const amountColor = isDue ? '#ef4444' : '#10b981';
+    const sign = isDue ? '' : '+';
 
     const li = `
         <li>
             <div class="li-left">
                 <div class="li-desc">
                     <span class="li-name">${name}</span>
-                    <span>- ${item.description}</span>
+                    <span>- ${personPurpose[name]}</span>
                 </div>
-                <span class="li-date">${item.t_date}</span>
+                <span class="li-date">${personLastDate[name]}</span>
             </div>
             <div class="li-right">
                 <span class="li-amount" style="color: ${amountColor}">
-                    ${isTake ? '-' : '+'} ${formatCurrency(item.amount)}
+                    ${sign}${formatCurrency(Math.abs(balance))}
                 </span>
                 <span class="li-type ${typeClass}">${typeLabel}</span>
             </div>
