@@ -60,14 +60,15 @@ function loadSavedDenominations() {
 // --- Fetch Secret Box Due ---
 async function fetchSecretDue() {
     const { data, error } = await _supabase.from('secret_box')
-        .select('amount, t_type')
+        .select('remaining_amount, t_type')
         .eq('user_id', currentUser.id);
 
     if (!error && data) {
         let due = 0;
         data.forEach(item => {
-            if (item.t_type === 'TAKE') due += item.amount;
-            else due -= item.amount;
+            if (item.t_type === 'TAKE' && item.remaining_amount > 0) {
+                due += item.remaining_amount;
+            }
         });
         secretDueAmount = due;
         document.getElementById('secDue').innerText = formatCurrency(due);
@@ -249,6 +250,7 @@ async function addTransaction(type) {
         amountInput.value = '';
         nameInput.focus();
         await loadTodayTransactions();
+        await autoSaveDayEnd();
     }
     btn.disabled = false;
     btn.innerHTML = originalHtml;
@@ -279,7 +281,10 @@ function renderList() {
 async function removeTransaction(id) {
     if(!confirm("Delete this transaction?")) return;
     const { error } = await _supabase.from('transactions').delete().eq('id', id);
-    if (!error) await loadTodayTransactions();
+    if (!error) {
+        await loadTodayTransactions();
+        await autoSaveDayEnd();
+    }
 }
 
 function updateSummary() {
@@ -298,6 +303,28 @@ function updateSummary() {
     
     document.getElementById('offBal').innerText = formatCurrency(final);
     calcDenom();
+}
+
+// Auto-save function (silent save without alert)
+async function autoSaveDayEnd() {
+    const date = document.getElementById('date').value;
+    const opening = parseFloat(document.getElementById('opening').value) || 0;
+    
+    let totalIn = transactions.filter(t => t.t_type === 'IN').reduce((sum, t) => sum + t.amount, 0);
+    let totalOut = transactions.filter(t => t.t_type === 'OUT').reduce((sum, t) => sum + t.amount, 0);
+    const final = (opening + totalIn) - totalOut;
+
+    const summaryPayload = {
+        user_id: currentUser.id,
+        report_date: date,
+        opening_balance: opening,
+        cash_received: totalIn,
+        handover_client: totalOut,
+        petty_cash: final
+    };
+
+    await _supabase.from('daily_accounts')
+        .upsert(summaryPayload, { onConflict: 'user_id, report_date' });
 }
 
 // Add event listener for manual opening balance change
