@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Daily Hisab Manager Dashboard - Track your daily cash flow, manage transactions, and monitor your financial records in real-time.">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' https: data:; connect-src 'self' https://*.supabase.co; font-src 'self' https://cdn.jsdelivr.net;">
     <title>Dashboard - Hisab Manager</title>
     
     <link rel="manifest" href="manifest.json">
@@ -11,13 +12,13 @@
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/18062/18062856.png">
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/18062/18062856.png">
     
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
     
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/dashboard.css">
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet" media="all">
 </head>
 <body>
     <div class="container">
@@ -144,27 +145,6 @@
     <script src="js/config.js" defer></script>
     <script src="js/share-image.js" defer></script>
     <script src="js/dashboard.js" defer></script>
-
-    <script>
-        function prepareImageShare() {
-            const data = {
-                date: document.getElementById('date').value,
-                opening: parseFloat(document.getElementById('opening').value) || 0,
-                transactions: transactions,
-                totalIn: transactions.filter(t => t.t_type === 'IN').reduce((sum, t) => sum + t.amount, 0),
-                totalOut: transactions.filter(t => t.t_type === 'OUT').reduce((sum, t) => sum + t.amount, 0),
-                finalBalance: parseFloat(document.getElementById('finalBalance').innerText.replace(/[^0-9.-]+/g,""))
-            };
-            shareReportAsImage(data);
-        }
-        function showShortcuts() {
-            alert("⌨️ Keyboard Shortcuts:\n\nAlt + I : Cash IN Entry\nAlt + O : Cash OUT Entry\nEnter : Save Entry\nAlt + S : Save Day End\nAlt + H : Go to History");
-        }
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js');
-            });
-        }
-    </script>
+    <script>function prepareImageShare(){const d={date:document.getElementById('date').value,opening:parseFloat(document.getElementById('opening').value)||0,transactions:transactions,totalIn:transactions.filter(t=>t.t_type==='IN').reduce((s,t)=>s+t.amount,0),totalOut:transactions.filter(t=>t.t_type==='OUT').reduce((s,t)=>s+t.amount,0),finalBalance:parseFloat(document.getElementById('finalBalance').innerText.replace(/[^0-9.-]+/g,""))};shareReportAsImage(d);}if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));</script>
 </body>
 </html>

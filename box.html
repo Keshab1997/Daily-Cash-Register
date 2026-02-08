@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' https: data:; connect-src 'self' https://*.supabase.co; font-src 'self' https://cdn.jsdelivr.net;">
 <title>Secret Box - Hisab</title>
 
 <link rel="manifest" href="manifest.json">
@@ -10,12 +11,12 @@
 <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/18062/18062856.png">
 <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/18062/18062856.png">
 
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/navbar.css">
 <link rel="stylesheet" href="css/box.css">
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet" media="all">
 </head>
 <body>
 <div class="container">
@@ -25,10 +26,10 @@
 <h2>Secret Box</h2>
 </a>
 <div class="nav-links">
-<a href="dashboard.html" title="Home"><i class="ri-home-4-line"></i></a>
-<a href="box.html" class="active" title="Secret Box"><i class="ri-archive-drawer-line"></i></a>
-<a href="history.html" title="History"><i class="ri-file-list-3-line"></i></a>
-<a href="profile.html" title="Profile"><i class="ri-user-3-line"></i></a>
+<a href="dashboard.html" title="Home" aria-label="Home"><i class="ri-home-4-line" aria-hidden="true"></i></a>
+<a href="box.html" class="active" title="Secret Box" aria-label="Secret Box"><i class="ri-archive-drawer-line" aria-hidden="true"></i></a>
+<a href="history.html" title="History" aria-label="History"><i class="ri-file-list-3-line" aria-hidden="true"></i></a>
+<a href="profile.html" title="Profile" aria-label="Profile"><i class="ri-user-3-line" aria-hidden="true"></i></a>
 </div>
 </div>
 
@@ -51,8 +52,8 @@
     </div>
 
     <div style="text-align: right; margin-bottom: 15px;">
-        <button onclick="showDueSummary()" style="background: #4f46e5; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
-            <i class="ri-file-list-2-line"></i> View Due Summary
+        <button onclick="showDueSummary()" aria-label="View Due Summary" style="background: #4f46e5; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+            <i class="ri-file-list-2-line" aria-hidden="true"></i> View Due Summary
         </button>
     </div>
 
@@ -78,11 +79,11 @@
         </div>
         
         <div class="btn-row">
-            <button class="btn-take" onclick="addSecretTransaction('TAKE')">
-                <i class="ri-hand-coin-line"></i> Take (Loan)
+            <button class="btn-take" onclick="addSecretTransaction('TAKE')" aria-label="Take Loan">
+                <i class="ri-hand-coin-line" aria-hidden="true"></i> Take (Loan)
             </button>
-            <button class="btn-return" onclick="addSecretTransaction('RETURN')">
-                <i class="ri-arrow-go-back-line"></i> Return (Deposit)
+            <button class="btn-return" onclick="addSecretTransaction('RETURN')" aria-label="Return Deposit">
+                <i class="ri-arrow-go-back-line" aria-hidden="true"></i> Return (Deposit)
             </button>
         </div>
     </div>
@@ -92,8 +93,8 @@
     <div class="history-section">
         <div class="history-header">
             <h3>Recent Activity</h3>
-            <a href="secret_history.html" class="btn-view-all">
-                View Full History & Edit <i class="ri-arrow-right-line"></i>
+            <a href="secret_history.html" class="btn-view-all" aria-label="View Full History and Edit">
+                View Full History & Edit <i class="ri-arrow-right-line" aria-hidden="true"></i>
             </a>
         </div>
         <ul id="secretList" class="secret-list"></ul>
@@ -105,8 +106,8 @@
 <div id="dueModal" class="modal-overlay" style="display: none;">
     <div class="modal-content">
         <div class="modal-header">
-            <h3><i class="ri-user-star-line"></i> Due List (Person-wise)</h3>
-            <button onclick="closeDueModal()" class="close-btn"><i class="ri-close-line"></i></button>
+            <h3><i class="ri-user-star-line" aria-hidden="true"></i> Due List (Person-wise)</h3>
+            <button onclick="closeDueModal()" class="close-btn" aria-label="Close modal"><i class="ri-close-line" aria-hidden="true"></i></button>
         </div>
         <div class="modal-body">
             <table class="due-table">
@@ -122,12 +123,9 @@
     </div>
 </div>
 
-<script src="js/config.js"></script>
-<script src="js/box.js"></script>
-<script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
-    }
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="js/config.js" defer></script>
+<script src="js/box.js" defer></script>
+<script>if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');</script>
 </body>
 </html>

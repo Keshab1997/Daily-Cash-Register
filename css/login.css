@@ -51,7 +51,7 @@ body {
 .form-box { width: 100%; max-width: 350px; animation: fadeIn 0.5s ease; }
 
 h3 { font-size: 1.8rem; color: #1f2937; margin-bottom: 5px; }
-.sub-text { color: #6b7280; margin-bottom: 30px; font-size: 0.9rem; }
+.sub-text { color: #4b5563; margin-bottom: 30px; font-size: 0.9rem; }
 
 .input-group {
     position: relative;
@@ -97,13 +97,13 @@ h3 { font-size: 1.8rem; color: #1f2937; margin-bottom: 5px; }
     transition: 0.3s;
 }
 
-.btn-primary:hover { background: #1d4ed8; transform: translateY(-2px); }
+.btn-primary:hover { background: #1d4ed8; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4); }
 
 .switch-text {
     text-align: center;
     margin-top: 20px;
     font-size: 0.9rem;
-    color: #6b7280;
+    color: #4b5563;
 }
 
 .switch-text span {
