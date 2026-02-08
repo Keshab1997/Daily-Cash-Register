@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Daily Hisab Manager - Manage your daily cash flow, transactions, and financial records easily with our simple and secure platform.">
     <title>Login - Hisab Manager</title>
     
     <link rel="manifest" href="manifest.json">
@@ -10,10 +11,14 @@
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/18062/18062856.png">
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/18062/18062856.png">
     
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://assets8.lottiefiles.com">
+    
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/login.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js" defer></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 <body>
@@ -40,15 +45,17 @@
                     <p class="sub-text">Login to your account</p>
                     
                     <div class="input-group">
-                        <i class="ri-mail-line"></i>
-                        <input type="email" id="email" placeholder="Email Address">
+                        <label for="email" class="sr-only">Email Address</label>
+                        <i class="ri-mail-line" aria-hidden="true"></i>
+                        <input type="email" id="email" name="email" placeholder="Email Address" aria-label="Email Address">
                     </div>
                     <div class="input-group">
-                        <i class="ri-lock-2-line"></i>
-                        <input type="password" id="password" placeholder="Password">
+                        <label for="password" class="sr-only">Password</label>
+                        <i class="ri-lock-2-line" aria-hidden="true"></i>
+                        <input type="password" id="password" name="password" placeholder="Password" aria-label="Password">
                     </div>
 
-                    <button class="btn-primary" onclick="login()">Login</button>
+                    <button class="btn-primary" onclick="login()" aria-label="Login to your account">Login</button>
                     
                     <p class="switch-text">
                         Don't have an account? <span onclick="toggleForms()">Sign Up</span>
@@ -60,15 +67,17 @@
                     <p class="sub-text">Sign up for free</p>
                     
                     <div class="input-group">
-                        <i class="ri-mail-line"></i>
-                        <input type="email" id="regEmail" placeholder="Your Email">
+                        <label for="regEmail" class="sr-only">Your Email</label>
+                        <i class="ri-mail-line" aria-hidden="true"></i>
+                        <input type="email" id="regEmail" name="regEmail" placeholder="Your Email" aria-label="Your Email">
                     </div>
                     <div class="input-group">
-                        <i class="ri-lock-2-line"></i>
-                        <input type="password" id="regPassword" placeholder="Password">
+                        <label for="regPassword" class="sr-only">Password</label>
+                        <i class="ri-lock-2-line" aria-hidden="true"></i>
+                        <input type="password" id="regPassword" name="regPassword" placeholder="Password" aria-label="Password">
                     </div>
 
-                    <button class="btn-primary" onclick="signup()">Sign Up</button>
+                    <button class="btn-primary" onclick="signup()" aria-label="Create new account">Sign Up</button>
                     
                     <p class="switch-text">
                         Already have an account? <span onclick="toggleForms()">Login</span>
@@ -97,14 +106,16 @@
         </div>
     </div>
 
-    <script src="js/config.js"></script>
-    <script src="js/auth.js"></script>
+    <script src="js/config.js" defer></script>
+    <script src="js/auth.js" defer></script>
 
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(() => console.log("PWA Service Worker Registered"))
-                .catch(err => console.log("PWA Error", err));
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(() => console.log("PWA Service Worker Registered"))
+                    .catch(err => console.log("PWA Error", err));
+            });
         }
     </script>
 </body>

@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Hisab</title>
+    <meta name="description" content="Daily Hisab Manager Dashboard - Track your daily cash flow, manage transactions, and monitor your financial records in real-time.">
+    <title>Dashboard - Hisab Manager</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563eb">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/18062/18062856.png">
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/18062/18062856.png">
     
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/dashboard.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 <body>
@@ -25,13 +27,13 @@
                 <h2>Hisab Manager</h2>
             </a>
             <div class="nav-links">
-                <button class="btn-icon-nav" onclick="toggleCashCounter()" title="Cash Counter">
-                    <i class="ri-calculator-line"></i>
+                <button class="btn-icon-nav" onclick="toggleCashCounter()" title="Cash Counter" aria-label="Toggle Cash Counter">
+                    <i class="ri-calculator-line" aria-hidden="true"></i>
                 </button>
-                <a href="dashboard.html" class="active" title="Home"><i class="ri-home-4-line"></i></a>
-                <a href="box.html" title="Secret Box"><i class="ri-archive-drawer-line"></i></a>
-                <a href="history.html" title="History"><i class="ri-file-list-3-line"></i></a>
-                <a href="profile.html" title="Profile"><i class="ri-user-3-line"></i></a>
+                <a href="dashboard.html" class="active" title="Home" aria-label="Home"><i class="ri-home-4-line" aria-hidden="true"></i></a>
+                <a href="box.html" title="Secret Box" aria-label="Secret Box"><i class="ri-archive-drawer-line" aria-hidden="true"></i></a>
+                <a href="history.html" title="History" aria-label="History"><i class="ri-file-list-3-line" aria-hidden="true"></i></a>
+                <a href="profile.html" title="Profile" aria-label="Profile"><i class="ri-user-3-line" aria-hidden="true"></i></a>
             </div>
         </div>
 
@@ -72,12 +74,12 @@
 
         <div class="top-controls">
             <div class="date-group">
-                <label class="label-text">Date (IST)</label>
-                <input type="date" id="date">
+                <label class="label-text" for="date">Date (IST)</label>
+                <input type="date" id="date" name="date" aria-label="Select date">
             </div>
             <div class="opening-group">
-                <label class="label-text">Opening Balance</label>
-                <input type="number" id="opening" value="0" oninput="updateSummary()">
+                <label class="label-text" for="opening">Opening Balance</label>
+                <input type="number" id="opening" name="opening" value="0" oninput="updateSummary()" aria-label="Opening balance">
             </div>
         </div>
 
@@ -88,9 +90,11 @@
                     <i class="ri-arrow-down-circle-line text-green"></i>
                 </div>
                 <div class="input-group">
-                    <input type="text" id="inName" placeholder="Payer Name" list="nameSuggestions">
-                    <input type="number" id="inAmount" placeholder="Amount">
-                    <button class="btn-add-in" onclick="addTransaction('IN')"><i class="ri-add-line"></i></button>
+                    <label for="inName" class="sr-only">Payer Name</label>
+                    <input type="text" id="inName" name="inName" placeholder="Payer Name" list="nameSuggestions" aria-label="Payer name">
+                    <label for="inAmount" class="sr-only">Amount</label>
+                    <input type="number" id="inAmount" name="inAmount" placeholder="Amount" aria-label="Amount received">
+                    <button class="btn-add-in" onclick="addTransaction('IN')" aria-label="Add cash received"><i class="ri-add-line" aria-hidden="true"></i></button>
                 </div>
                 <ul id="listIn" class="trans-list"></ul>
             </div>
@@ -101,9 +105,11 @@
                     <i class="ri-arrow-up-circle-line text-red"></i>
                 </div>
                 <div class="input-group">
-                    <input type="text" id="outName" placeholder="Receiver / Expense" list="nameSuggestions">
-                    <input type="number" id="outAmount" placeholder="Amount">
-                    <button class="btn-add-out" onclick="addTransaction('OUT')"><i class="ri-add-line"></i></button>
+                    <label for="outName" class="sr-only">Receiver / Expense</label>
+                    <input type="text" id="outName" name="outName" placeholder="Receiver / Expense" list="nameSuggestions" aria-label="Receiver or expense name">
+                    <label for="outAmount" class="sr-only">Amount</label>
+                    <input type="number" id="outAmount" name="outAmount" placeholder="Amount" aria-label="Amount paid">
+                    <button class="btn-add-out" onclick="addTransaction('OUT')" aria-label="Add cash payment"><i class="ri-add-line" aria-hidden="true"></i></button>
                 </div>
                 <ul id="listOut" class="trans-list"></ul>
             </div>
@@ -127,15 +133,17 @@
         </div>
 
         <div class="action-buttons">
-            <button class="btn-whatsapp" onclick="shareWhatsApp()" title="Share Text"><i class="ri-chat-1-line"></i> <span class="btn-label">Text</span></button>
-            <button class="btn-image" onclick="prepareImageShare()" title="Share Image"><i class="ri-image-line"></i> <span class="btn-label">Image</span></button>
-            <button class="btn-save" onclick="saveDayEnd()"><i class="ri-save-3-line"></i> <span class="btn-label">Save Day End <small class="shortcut-text">[Alt+S]</small></span></button>
+            <button class="btn-whatsapp" onclick="shareWhatsApp()" title="Share Text" aria-label="Share report via WhatsApp"><i class="ri-chat-1-line" aria-hidden="true"></i> <span class="btn-label">Text</span></button>
+            <button class="btn-image" onclick="prepareImageShare()" title="Share Image" aria-label="Share report as image"><i class="ri-image-line" aria-hidden="true"></i> <span class="btn-label">Image</span></button>
+            <button class="btn-save" onclick="saveDayEnd()" aria-label="Save day end report"><i class="ri-save-3-line" aria-hidden="true"></i> <span class="btn-label">Save Day End <small class="shortcut-text">[Alt+S]</small></span></button>
         </div>
     </div>
 
-    <script src="js/config.js"></script>
-    <script src="js/share-image.js"></script>
-    <script src="js/dashboard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="js/config.js" defer></script>
+    <script src="js/share-image.js" defer></script>
+    <script src="js/dashboard.js" defer></script>
 
     <script>
         function prepareImageShare() {
@@ -153,7 +161,9 @@
             alert("⌨️ Keyboard Shortcuts:\n\nAlt + I : Cash IN Entry\nAlt + O : Cash OUT Entry\nEnter : Save Entry\nAlt + S : Save Day End\nAlt + H : Go to History");
         }
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js');
+            });
         }
     </script>
 </body>
