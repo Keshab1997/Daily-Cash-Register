@@ -132,23 +132,26 @@ async function fetchOpeningBalance() {
     const selectedDate = document.getElementById('date').value;
     const openingInput = document.getElementById('opening');
     
-    // Check if already saved for this date
+    if (!selectedDate) {
+        openingInput.value = 0;
+        updateSummary();
+        return;
+    }
+    
     const { data: savedDay } = await _supabase.from('daily_accounts')
         .select('opening_balance')
         .eq('user_id', currentUser.id)
         .eq('report_date', selectedDate)
         .limit(1);
     
-    // If already saved, use that opening balance
     if (savedDay && savedDay.length > 0) {
-        openingInput.value = savedDay[0].opening_balance;
+        openingInput.value = savedDay[0].opening_balance || 0;
         openingInput.style.background = '#fef3c7';
         setTimeout(() => openingInput.style.background = '', 1000);
         updateSummary();
         return;
     }
     
-    // Otherwise calculate from previous day
     const { data: lastSavedDay } = await _supabase.from('daily_accounts')
         .select('report_date, petty_cash')
         .eq('user_id', currentUser.id)
@@ -160,7 +163,7 @@ async function fetchOpeningBalance() {
     let lastSavedDate = '1900-01-01';
 
     if (lastSavedDay && lastSavedDay.length > 0) {
-        baseBalance = lastSavedDay[0].petty_cash;
+        baseBalance = parseFloat(lastSavedDay[0].petty_cash) || 0;
         lastSavedDate = lastSavedDay[0].report_date;
     }
 
@@ -171,10 +174,11 @@ async function fetchOpeningBalance() {
         .lt('t_date', selectedDate);
 
     let adjustment = 0;
-    if (pendingTrans) {
+    if (pendingTrans && pendingTrans.length > 0) {
         pendingTrans.forEach(t => {
-            if (t.t_type === 'IN') adjustment += t.amount;
-            else adjustment -= t.amount;
+            const amt = parseFloat(t.amount) || 0;
+            if (t.t_type === 'IN') adjustment += amt;
+            else adjustment -= amt;
         });
     }
 
