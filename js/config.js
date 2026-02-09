@@ -75,6 +75,30 @@ function throttle(func, limit = 100) {
     };
 }
 
+// Prevent pull-to-refresh
+let lastTouchY = 0;
+let preventPullToRefresh = false;
+
+document.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    lastTouchY = e.touches[0].clientY;
+    preventPullToRefresh = window.pageYOffset === 0;
+}, { passive: false });
+
+document.addEventListener('touchmove', (e) => {
+    const touchY = e.touches[0].clientY;
+    const touchYDelta = touchY - lastTouchY;
+    lastTouchY = touchY;
+
+    if (preventPullToRefresh) {
+        if (touchYDelta > 0) {
+            e.preventDefault();
+            return;
+        }
+        preventPullToRefresh = false;
+    }
+}, { passive: false });
+
 async function checkAuth(required = true) {
     showProgress(30);
     const { data: { session } } = await _supabase.auth.getSession();
