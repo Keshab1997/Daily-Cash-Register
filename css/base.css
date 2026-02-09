@@ -35,7 +35,12 @@ body {
     display: flex; 
     flex-direction: column;
     align-items: center; 
-    padding: 20px; 
+    padding: 20px;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    user-select: none;
 }
 
 .container { 
@@ -67,6 +72,8 @@ input, select {
     outline: none; 
     transition: 0.2s;
     background: #f9fafb;
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 input:focus { border-color: var(--primary); background: white; }
