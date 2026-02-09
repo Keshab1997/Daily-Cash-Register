@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hisab-manager-v8';
+const CACHE_NAME = 'hisab-manager-v9';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -7,6 +7,7 @@ const ASSETS_TO_CACHE = [
     './profile.html',
     './box.html',
     './secret_history.html',
+    './counter_history.html',
     './css/base.css',
     './css/login.css',
     './css/navbar.css',

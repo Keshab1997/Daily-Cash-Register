@@ -1,6 +1,7 @@
 let currentUser = null;
 let transactions = [];
 let secretDueAmount = 0;
+let allSuggestions = [];
 
 const getISTDate = () => {
     return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
@@ -34,6 +35,7 @@ window.onload = async () => {
 
     setupKeyboardShortcuts();
     loadSavedDenominations();
+    setupCustomDropdown();
 
     await checkAutoDayEnd();
     await fetchOpeningBalance();
@@ -214,9 +216,60 @@ async function loadSuggestions() {
         .eq('user_id', currentUser.id);
     
     if(data) {
-        const uniqueNames = [...new Set(data.map(item => item.party_name))];
-        document.getElementById('nameSuggestions').innerHTML = uniqueNames.map(name => `<option value="${name}">`).join('');
+        allSuggestions = [...new Set(data.map(item => item.party_name))];
     }
+}
+
+function setupCustomDropdown() {
+    const inName = document.getElementById('inName');
+    const outName = document.getElementById('outName');
+    
+    const inCard = inName.closest('.card');
+    const outCard = outName.closest('.card');
+    
+    const inDropdown = document.createElement('div');
+    inDropdown.className = 'suggestion-dropdown';
+    inDropdown.id = 'inDropdown';
+    inName.closest('.input-group').appendChild(inDropdown);
+    
+    const outDropdown = document.createElement('div');
+    outDropdown.className = 'suggestion-dropdown';
+    outDropdown.id = 'outDropdown';
+    outName.closest('.input-group').appendChild(outDropdown);
+    
+    inName.addEventListener('input', (e) => showSuggestions(e.target, inDropdown));
+    outName.addEventListener('input', (e) => showSuggestions(e.target, outDropdown));
+    
+    inName.addEventListener('focus', (e) => showSuggestions(e.target, inDropdown));
+    outName.addEventListener('focus', (e) => showSuggestions(e.target, outDropdown));
+    
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.input-group')) {
+            inDropdown.classList.remove('active');
+            outDropdown.classList.remove('active');
+        }
+    });
+}
+
+function showSuggestions(input, dropdown) {
+    const value = input.value.toLowerCase();
+    const filtered = allSuggestions.filter(s => s.toLowerCase().includes(value));
+    
+    if (filtered.length === 0) {
+        dropdown.classList.remove('active');
+        return;
+    }
+    
+    dropdown.innerHTML = filtered.map(name => 
+        `<div class="suggestion-item" onclick="selectSuggestion('${input.id}', '${name}')">${name}</div>`
+    ).join('');
+    
+    dropdown.classList.add('active');
+}
+
+function selectSuggestion(inputId, value) {
+    document.getElementById(inputId).value = value;
+    document.getElementById(inputId === 'inName' ? 'inDropdown' : 'outDropdown').classList.remove('active');
 }
 
 async function addTransaction(type) {
@@ -426,7 +479,32 @@ function shareWhatsApp() {
 function toggleCashCounter() {
     const box = document.getElementById('cashCounter');
     box.style.display = box.style.display === 'none' ? 'block' : 'none';
-    if (box.style.display === 'block') fetchSecretDue();
+    if (box.style.display === 'block') {
+        fetchSecretDue();
+        loadLastCounterData();
+    }
+}
+
+async function loadLastCounterData() {
+    const date = document.getElementById('date').value;
+    const { data } = await _supabase.from('cash_counter_history')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .eq('count_date', date)
+        .limit(1);
+    
+    if (data && data.length > 0) {
+        const saved = data[0].denomination_data;
+        const inputs = document.querySelectorAll('.denom-input');
+        inputs.forEach(input => {
+            const val = input.getAttribute('data-val');
+            if (saved[val] !== undefined) {
+                input.value = saved[val];
+            }
+        });
+        calcDenom();
+        showToast('Previous count loaded', 'info');
+    }
 }
 
 function calcDenom() {
@@ -440,8 +518,6 @@ function calcDenom() {
         total += (multiplier * count);
         denomData[multiplier] = input.value;
     });
-
-    localStorage.setItem('cashDenoms', JSON.stringify(denomData));
 
     document.getElementById('totalCounted').innerText = formatCurrency(total);
 
@@ -463,4 +539,44 @@ function calcDenom() {
         diffEl.innerText = `Short: ${formatCurrency(diff)}`;
         diffEl.style.color = "#dc2626";
     }
+}
+
+async function saveCounterHistory() {
+    const date = document.getElementById('date').value;
+    const inputs = document.querySelectorAll('.denom-input');
+    const denomData = {};
+    let total = 0;
+    
+    inputs.forEach(input => {
+        const multiplier = parseInt(input.getAttribute('data-val'));
+        const count = parseInt(input.value) || 0;
+        total += (multiplier * count);
+        denomData[multiplier] = count;
+    });
+    
+    const officialBal = parseFloat(document.getElementById('finalBalance').innerText.replace(/[^0-9.-]+/g,"")) || 0;
+    const expectedCash = officialBal - secretDueAmount;
+    const diff = total - expectedCash;
+    
+    const payload = {
+        user_id: currentUser.id,
+        count_date: date,
+        denomination_data: denomData,
+        total_counted: total,
+        expected_cash: expectedCash,
+        difference: diff
+    };
+    
+    const { error } = await _supabase.from('cash_counter_history')
+        .upsert(payload, { onConflict: 'user_id, count_date' });
+    
+    if (error) {
+        showToast('Error saving: ' + error.message, 'error');
+    } else {
+        showToast('Counter history saved!', 'success');
+    }
+}
+
+function viewCounterHistory() {
+    window.open('counter_history.html', '_blank');
 }

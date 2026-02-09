@@ -83,9 +83,41 @@ input[type="date"]::-webkit-datetime-edit-year-field {
 .text-green { color: var(--success); }
 .text-red { color: var(--danger); }
 
-.input-group { padding: 15px; display: flex; gap: 10px; background: #f9fafb; border-bottom: 1px solid var(--border); }
+.input-group { padding: 15px; display: flex; gap: 10px; background: #f9fafb; border-bottom: 1px solid var(--border); position: relative; }
 .input-group input[type="text"] { flex: 2; }
 .input-group input[type="number"] { flex: 1; }
+
+.suggestion-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 15px;
+    right: 15px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: none;
+}
+
+.suggestion-dropdown.active { display: block; }
+
+.suggestion-item {
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 0.95rem;
+}
+
+.suggestion-item:hover {
+    background: #f3f4f6;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
 
 .btn-add-in { background: var(--success); color: white; width: 45px; }
 .btn-add-out { background: var(--danger); color: white; width: 45px; }
@@ -143,16 +175,18 @@ input[type="date"]::-webkit-datetime-edit-year-field {
     margin-bottom: 20px;
     box-shadow: 0 10px 20px rgba(0,0,0,0.1);
 }
-.counter-header { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 10px; color: var(--primary); }
+.counter-header { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 10px; color: var(--primary); align-items: center; }
 .counter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
 .denom-row { display: flex; align-items: center; gap: 8px; background: #f3f4f6; padding: 5px 10px; border-radius: 8px; }
 .denom-row span { font-weight: 700; width: 50px; font-size: 0.85rem; color: #4b5563; }
 .high-val { background: #eff6ff; border: 1px solid #bfdbfe; }
 .high-val span { color: #2563eb; }
 .denom-input { padding: 5px !important; text-align: center; font-weight: 600; }
-.counter-footer { margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+.counter-footer { margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
 .diff-status { font-weight: 700; font-size: 0.9rem; }
 .close-mini { background: none; color: #999; padding: 0; width: auto; }
+.history-mini { background: var(--primary); color: white; padding: 5px 10px; border-radius: 6px; font-size: 0.85rem; border: none; cursor: pointer; }
+.btn-save-counter { background: var(--success); color: white; padding: 8px 15px; border-radius: 6px; font-size: 0.85rem; border: none; cursor: pointer; font-weight: 600; }
 
 .adjustment-info {
     background: #fef2f2;

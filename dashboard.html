@@ -42,7 +42,10 @@
         <div id="cashCounter" class="cash-counter-box" style="display: none;">
             <div class="counter-header">
                 <span><i class="ri-coins-line"></i> Physical Cash Counter</span>
-                <button onclick="toggleCashCounter()" class="close-mini"><i class="ri-close-line"></i></button>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="viewCounterHistory()" class="history-mini" title="View History"><i class="ri-history-line"></i></button>
+                    <button onclick="toggleCashCounter()" class="close-mini"><i class="ri-close-line"></i></button>
+                </div>
             </div>
             
             <!-- Secret Adjustment Info -->
@@ -70,6 +73,7 @@
             <div class="counter-footer">
                 <div>Total Counted: <b id="totalCounted">₹0</b></div>
                 <div id="diffStatus" class="diff-status">Difference: ₹0</div>
+                <button onclick="saveCounterHistory()" class="btn-save-counter" title="Save Count History"><i class="ri-save-line"></i> Save</button>
             </div>
         </div>
 
@@ -92,7 +96,7 @@
                 </div>
                 <div class="input-group">
                     <label for="inName" class="sr-only">Payer Name</label>
-                    <input type="text" id="inName" name="inName" placeholder="Payer Name" list="nameSuggestions" aria-label="Payer name">
+                    <input type="text" id="inName" name="inName" placeholder="Payer Name" autocomplete="off" aria-label="Payer name">
                     <label for="inAmount" class="sr-only">Amount</label>
                     <input type="number" id="inAmount" name="inAmount" placeholder="Amount" aria-label="Amount received">
                     <button class="btn-add-in" onclick="addTransaction('IN')" aria-label="Add cash received"><i class="ri-add-line" aria-hidden="true"></i></button>
@@ -107,7 +111,7 @@
                 </div>
                 <div class="input-group">
                     <label for="outName" class="sr-only">Receiver / Expense</label>
-                    <input type="text" id="outName" name="outName" placeholder="Receiver / Expense" list="nameSuggestions" aria-label="Receiver or expense name">
+                    <input type="text" id="outName" name="outName" placeholder="Receiver / Expense" autocomplete="off" aria-label="Receiver or expense name">
                     <label for="outAmount" class="sr-only">Amount</label>
                     <input type="number" id="outAmount" name="outAmount" placeholder="Amount" aria-label="Amount paid">
                     <button class="btn-add-out" onclick="addTransaction('OUT')" aria-label="Add cash payment"><i class="ri-add-line" aria-hidden="true"></i></button>
@@ -115,8 +119,6 @@
                 <ul id="listOut" class="trans-list"></ul>
             </div>
         </div>
-
-        <datalist id="nameSuggestions"></datalist>
 
         <div class="summary-box">
             <div class="sum-item">

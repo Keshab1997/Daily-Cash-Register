@@ -1,6 +1,8 @@
 let currentUser = null;
 let allSecretData = [];
 let currentSystemBalance = 0;
+let allPurposeSuggestions = [];
+let allNameSuggestions = [];
 
 const getISTDate = () => {
 return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
@@ -21,6 +23,7 @@ document.getElementById('sDate').value = getISTDate();
 
 await loadAllData();
 await loadSuggestions();
+setupCustomDropdown();
 };
 
 async function loadAllData() {
@@ -162,14 +165,66 @@ phyEl.style.color = physicalCash >= 0 ? 'white' : '#ffcfcf';
 // --- Auto Fill Logic ---
 async function loadSuggestions() {
 const { data } = await _supabase.from('secret_box')
-.select('description')
+.select('description, party_name')
 .eq('user_id', currentUser.id);
 
 if(data) {
-    const unique = [...new Set(data.map(item => item.description))];
-    document.getElementById('purposeSuggestions').innerHTML = 
-        unique.map(d => `<option value="${d}">`).join('');
+    allPurposeSuggestions = [...new Set(data.map(item => item.description))];
+    allNameSuggestions = [...new Set(data.map(item => item.party_name).filter(Boolean))];
 }
+}
+
+function setupCustomDropdown() {
+    const purposeInput = document.getElementById('sPurpose');
+    const nameInput = document.getElementById('sName');
+    
+    const purposeDropdown = document.createElement('div');
+    purposeDropdown.className = 'suggestion-dropdown';
+    purposeDropdown.id = 'purposeDropdown';
+    purposeInput.parentElement.appendChild(purposeDropdown);
+    
+    const nameDropdown = document.createElement('div');
+    nameDropdown.className = 'suggestion-dropdown';
+    nameDropdown.id = 'nameDropdown';
+    nameInput.parentElement.appendChild(nameDropdown);
+    
+    purposeInput.addEventListener('input', (e) => {
+        showSuggestions(e.target, purposeDropdown, allPurposeSuggestions);
+        handleAutoFill();
+    });
+    nameInput.addEventListener('input', (e) => showSuggestions(e.target, nameDropdown, allNameSuggestions));
+    
+    purposeInput.addEventListener('focus', (e) => showSuggestions(e.target, purposeDropdown, allPurposeSuggestions));
+    nameInput.addEventListener('focus', (e) => showSuggestions(e.target, nameDropdown, allNameSuggestions));
+    
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.inp-grp')) {
+            purposeDropdown.classList.remove('active');
+            nameDropdown.classList.remove('active');
+        }
+    });
+}
+
+function showSuggestions(input, dropdown, suggestions) {
+    const value = input.value.toLowerCase();
+    const filtered = suggestions.filter(s => s.toLowerCase().includes(value));
+    
+    if (filtered.length === 0) {
+        dropdown.classList.remove('active');
+        return;
+    }
+    
+    dropdown.innerHTML = filtered.map(item => 
+        `<div class="suggestion-item" onclick="selectSuggestion('${input.id}', '${item.replace(/'/g, "\\'")}')">${item}</div>`
+    ).join('');
+    
+    dropdown.classList.add('active');
+}
+
+function selectSuggestion(inputId, value) {
+    document.getElementById(inputId).value = value;
+    document.getElementById(inputId === 'sPurpose' ? 'purposeDropdown' : 'nameDropdown').classList.remove('active');
+    if (inputId === 'sPurpose') handleAutoFill();
 }
 
 function handleAutoFill() {

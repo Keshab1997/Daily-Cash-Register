@@ -66,11 +66,11 @@
             </div>
             <div class="inp-grp">
                 <label>Purpose</label>
-                <input type="text" id="sPurpose" placeholder="Purpose (e.g. Loan)" list="purposeSuggestions" oninput="handleAutoFill()">
+                <input type="text" id="sPurpose" placeholder="Purpose (e.g. Loan)" autocomplete="off" oninput="handleAutoFill()">
             </div>
             <div class="inp-grp">
                 <label>Name</label>
-                <input type="text" id="sName" placeholder="Person Name">
+                <input type="text" id="sName" placeholder="Person Name" autocomplete="off">
             </div>
             <div class="inp-grp">
                 <label>Amount</label>
@@ -87,8 +87,6 @@
             </button>
         </div>
     </div>
-
-    <datalist id="purposeSuggestions"></datalist>
 
     <div class="history-section">
         <div class="history-header">

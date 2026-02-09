@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Counter History - Hisab</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/navbar.css">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+<style>
+.history-grid { display: grid; gap: 15px; margin-top: 20px; }
+.history-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
+.history-date { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+.denom-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin: 15px 0; }
+.denom-item { background: #f9fafb; padding: 10px; border-radius: 8px; text-align: center; }
+.denom-label { font-size: 0.75rem; color: var(--text-light); display: block; }
+.denom-count { font-size: 1.2rem; font-weight: 700; color: var(--text-main); }
+.summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e5e7eb; }
+.summary-row:last-child { border-bottom: none; font-weight: 700; font-size: 1.1rem; }
+.status-match { color: #059669; }
+.status-excess { color: #2563eb; }
+.status-short { color: #dc2626; }
+.compare-section { background: #fef3c7; padding: 15px; border-radius: 8px; margin-top: 15px; }
+.compare-title { font-weight: 700; margin-bottom: 10px; color: #92400e; }
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 0.85rem; }
+.compare-header { font-weight: 600; color: #78350f; }
+.compare-change { font-weight: 700; }
+.change-up { color: #059669; }
+.change-down { color: #dc2626; }
+.change-same { color: #6b7280; }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="navbar">
+<a href="dashboard.html" class="brand">
+<i class="ri-history-line"></i>
+<h2>Counter History</h2>
+</a>
+<div class="nav-links">
+<a href="dashboard.html" title="Back to Dashboard"><i class="ri-arrow-left-line"></i></a>
+</div>
+</div>
+
+<div id="historyList" class="history-grid"></div>
+<div id="noData" style="text-align: center; padding: 50px; color: var(--text-light); display: none;">
+<i class="ri-inbox-line" style="font-size: 3rem; opacity: 0.3;"></i>
+<p>No counter history found</p>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script>
+let currentUser = null;
+let allHistory = [];
+
+const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
+};
+
+window.onload = async () => {
+    const session = await checkAuth(true);
+    currentUser = session.user;
+    await loadHistory();
+};
+
+async function loadHistory() {
+    const { data, error } = await _supabase.from('cash_counter_history')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('count_date', { ascending: false });
+    
+    if (error || !data || data.length === 0) {
+        document.getElementById('noData').style.display = 'block';
+        return;
+    }
+    
+    allHistory = data;
+    renderHistory();
+}
+
+function renderHistory() {
+    const list = document.getElementById('historyList');
+    list.innerHTML = '';
+    
+    allHistory.forEach((item, index) => {
+        const denoms = item.denomination_data;
+        const prevItem = allHistory[index + 1];
+        
+        let denomHtml = '';
+        const denomOrder = [50000, 20000, 10000, 500, 200, 100, 50, 20, 10, 1];
+        denomOrder.forEach(val => {
+            if (denoms[val] && denoms[val] > 0) {
+                const label = val === 1 ? 'Coins' : val >= 1000 ? (val/1000)+'k' : val;
+                denomHtml += `<div class="denom-item"><span class="denom-label">${label}</span><span class="denom-count">${denoms[val]}</span></div>`;
+            }
+        });
+        
+        let statusClass = 'status-match';
+        let statusText = '✅ Matched';
+        if (Math.abs(item.difference) >= 1) {
+            if (item.difference > 0) {
+                statusClass = 'status-excess';
+                statusText = `Excess: +${formatCurrency(item.difference)}`;
+            } else {
+                statusClass = 'status-short';
+                statusText = `Short: ${formatCurrency(item.difference)}`;
+            }
+        }
+        
+        let compareHtml = '';
+        if (prevItem) {
+            compareHtml = '<div class="compare-section"><div class="compare-title">📊 Comparison with Previous Day</div><div class="compare-grid">';
+            compareHtml += '<div class="compare-header">Denomination</div><div class="compare-header">Previous</div><div class="compare-header">Change</div>';
+            
+            denomOrder.forEach(val => {
+                const current = denoms[val] || 0;
+                const previous = prevItem.denomination_data[val] || 0;
+                if (current > 0 || previous > 0) {
+                    const change = current - previous;
+                    let changeClass = 'change-same';
+                    let changeText = '—';
+                    if (change > 0) {
+                        changeClass = 'change-up';
+                        changeText = `+${change}`;
+                    } else if (change < 0) {
+                        changeClass = 'change-down';
+                        changeText = change;
+                    }
+                    const label = val === 1 ? 'Coins' : val >= 1000 ? (val/1000)+'k' : val;
+                    compareHtml += `<div>${label}</div><div>${previous}</div><div class="compare-change ${changeClass}">${changeText}</div>`;
+                }
+            });
+            compareHtml += '</div></div>';
+        }
+        
+        const card = `
+            <div class="history-card">
+                <div class="history-header">
+                    <span class="history-date">📅 ${item.count_date}</span>
+                    <span class="${statusClass}">${statusText}</span>
+                </div>
+                <div class="denom-grid">${denomHtml}</div>
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid var(--border);">
+                    <div class="summary-row"><span>Total Counted:</span><span>${formatCurrency(item.total_counted)}</span></div>
+                    <div class="summary-row"><span>Expected Cash:</span><span>${formatCurrency(item.expected_cash)}</span></div>
+                    <div class="summary-row ${statusClass}"><span>Difference:</span><span>${formatCurrency(item.difference)}</span></div>
+                </div>
+                ${compareHtml}
+            </div>
+        `;
+        list.innerHTML += card;
+    });
+}
+</script>
+</body>
+</html>
