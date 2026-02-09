@@ -15,10 +15,11 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
     <link rel="dns-prefetch" href="https://assets8.lottiefiles.com">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
     
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/login.css">
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet" media="all">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" media="print" onload="this.media='all'">
 </head>
 <body>
     <main class="main-container" role="main">
@@ -44,18 +45,20 @@
                     <h3>Welcome! 👋</h3>
                     <p class="sub-text">Login to your account</p>
                     
+                    <form onsubmit="login(); return false;">
                     <div class="input-group">
                         <label for="email" class="sr-only">Email Address</label>
                         <i class="ri-mail-line" aria-hidden="true"></i>
-                        <input type="email" id="email" name="email" placeholder="Email Address" aria-label="Email Address">
+                        <input type="email" id="email" name="email" placeholder="Email Address" aria-label="Email Address" required>
                     </div>
                     <div class="input-group">
                         <label for="password" class="sr-only">Password</label>
                         <i class="ri-lock-2-line" aria-hidden="true"></i>
-                        <input type="password" id="password" name="password" placeholder="Password" aria-label="Password">
+                        <input type="password" id="password" name="password" placeholder="Password" aria-label="Password" required>
                     </div>
 
-                    <button class="btn-primary" onclick="login()" aria-label="Login to your account">Login</button>
+                    <button type="submit" class="btn-primary" aria-label="Login to your account">Login</button>
+                    </form>
                     
                     <p class="switch-text">
                         Don't have an account? <a href="#signup" onclick="toggleForms(); return false;" style="color:#2563eb;text-decoration:underline;cursor:pointer;">Sign Up</a>
@@ -112,5 +115,6 @@
     <script src="js/pwa.js" defer></script>
     <script src="js/auth.js" defer></script>
     <script>if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').then(reg=>{reg.addEventListener('updatefound',()=>{const newWorker=reg.installing;newWorker.addEventListener('statechange',()=>{if(newWorker.state==='installed'&&navigator.serviceWorker.controller){showUpdatePrompt();}});})}));</script>
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css"></noscript>
 </body>
 </html>

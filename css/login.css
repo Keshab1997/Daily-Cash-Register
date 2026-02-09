@@ -103,11 +103,11 @@ h3 { font-size: 1.8rem; color: #1f2937; margin-bottom: 5px; }
     text-align: center;
     margin-top: 20px;
     font-size: 0.9rem;
-    color: #4b5563;
+    color: #374151;
 }
 
 .switch-text span {
-    color: #2563eb;
+    color: #1d4ed8;
     font-weight: 600;
     cursor: pointer;
     text-decoration: underline;
