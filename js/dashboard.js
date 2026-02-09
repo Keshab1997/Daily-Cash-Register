@@ -80,27 +80,47 @@ async function fetchSecretDue() {
 
 function setupKeyboardShortcuts() {
     document.addEventListener('keydown', (e) => {
+        // Alt + I: Focus IN name input
         if (e.altKey && e.code === 'KeyI') {
             e.preventDefault();
             document.getElementById('inName').focus();
         }
+        // Alt + O: Focus OUT name input
         if (e.altKey && e.code === 'KeyO') {
             e.preventDefault();
             document.getElementById('outName').focus();
         }
+        // Alt + S: Save Day End
         if (e.altKey && e.code === 'KeyS') {
             e.preventDefault();
             saveDayEnd();
         }
+        // Alt + H: Go to History
         if (e.altKey && e.code === 'KeyH') {
             e.preventDefault();
             window.location.href = 'history.html';
         }
+        // Alt + C: Toggle Cash Counter
+        if (e.altKey && e.code === 'KeyC') {
+            e.preventDefault();
+            toggleCashCounter();
+        }
+        // Escape: Close Cash Counter
+        if (e.key === 'Escape') {
+            const counter = document.getElementById('cashCounter');
+            if (counter && counter.style.display !== 'none') {
+                toggleCashCounter();
+            }
+        }
+        // Enter key on IN inputs
         if (e.key === 'Enter') {
             if (document.activeElement.id === 'inName' || document.activeElement.id === 'inAmount') {
+                e.preventDefault();
                 addTransaction('IN');
             }
+            // Enter key on OUT inputs
             if (document.activeElement.id === 'outName' || document.activeElement.id === 'outAmount') {
+                e.preventDefault();
                 addTransaction('OUT');
             }
         }
@@ -237,8 +257,8 @@ function setupCustomDropdown() {
     outDropdown.id = 'outDropdown';
     outName.closest('.input-group').appendChild(outDropdown);
     
-    inName.addEventListener('input', (e) => showSuggestions(e.target, inDropdown));
-    outName.addEventListener('input', (e) => showSuggestions(e.target, outDropdown));
+    inName.addEventListener('input', (e) => debouncedShowSuggestions(e.target, inDropdown));
+    outName.addEventListener('input', (e) => debouncedShowSuggestions(e.target, outDropdown));
     
     inName.addEventListener('focus', (e) => showSuggestions(e.target, inDropdown));
     outName.addEventListener('focus', (e) => showSuggestions(e.target, outDropdown));
@@ -267,6 +287,8 @@ function showSuggestions(input, dropdown) {
     dropdown.classList.add('active');
 }
 
+const debouncedShowSuggestions = debounce(showSuggestions, 200);
+
 function selectSuggestion(inputId, value) {
     document.getElementById(inputId).value = value;
     document.getElementById(inputId === 'inName' ? 'inDropdown' : 'outDropdown').classList.remove('active');
@@ -286,9 +308,7 @@ async function addTransaction(type) {
 
     if (!name || !amount || amount <= 0) return;
 
-    btn.disabled = true;
-    const originalHtml = btn.innerHTML;
-    btn.innerHTML = '<i class="ri-loader-4-line"></i>';
+    setButtonLoading(btn, true);
 
     const payload = {
         user_id: currentUser.id,
@@ -301,7 +321,7 @@ async function addTransaction(type) {
     const { error } = await _supabase.from('transactions').insert(payload);
 
     if (error) {
-        alert("Error: " + error.message);
+        showToast("Error: " + error.message, 'error');
     } else {
         nameInput.value = '';
         amountInput.value = '';
@@ -309,8 +329,7 @@ async function addTransaction(type) {
         await loadTodayTransactions();
         await autoSaveDayEnd();
     }
-    btn.disabled = false;
-    btn.innerHTML = originalHtml;
+    setButtonLoading(btn, false);
 }
 
 function renderList() {
@@ -385,10 +404,12 @@ async function autoSaveDayEnd() {
 }
 
 // Add event listener for manual opening balance change
+const debouncedUpdateSummary = debounce(updateSummary, 300);
+
 window.addEventListener('DOMContentLoaded', () => {
     const openingInput = document.getElementById('opening');
     if (openingInput) {
-        openingInput.addEventListener('input', updateSummary);
+        openingInput.addEventListener('input', debouncedUpdateSummary);
     }
 });
 
@@ -409,14 +430,23 @@ async function saveDayEnd() {
         petty_cash: final
     };
 
+    const btn = document.querySelector('.btn-save');
+    setButtonLoading(btn, true);
+    showProgress(50);
+
     const { error } = await _supabase.from('daily_accounts')
         .upsert(summaryPayload, { onConflict: 'user_id, report_date' });
 
-    if(error) alert('Error: ' + error.message);
-    else {
+    if(error) {
+        showToast('Error: ' + error.message, 'error');
+    } else {
         sendNotification("✅ Saved", "Day End report saved successfully!");
-        alert('✅ Day End Saved Successfully!');
+        showToast('✅ Day End Saved Successfully!', 'success');
     }
+    
+    showProgress(100);
+    hideProgress();
+    setButtonLoading(btn, false);
 }
 
 // --- মালিকের জন্য বিস্তারিত হোয়াটসঅ্যাপ রিপোর্ট ---
@@ -507,6 +537,8 @@ async function loadLastCounterData() {
     }
 }
 
+const throttledCalcDenom = throttle(calcDenom, 100);
+
 function calcDenom() {
     const inputs = document.querySelectorAll('.denom-input');
     let total = 0;
@@ -567,6 +599,9 @@ async function saveCounterHistory() {
         difference: diff
     };
     
+    const btn = document.querySelector('.btn-save-counter');
+    setButtonLoading(btn, true);
+    
     const { error } = await _supabase.from('cash_counter_history')
         .upsert(payload, { onConflict: 'user_id, count_date' });
     
@@ -575,6 +610,8 @@ async function saveCounterHistory() {
     } else {
         showToast('Counter history saved!', 'success');
     }
+    
+    setButtonLoading(btn, false);
 }
 
 function viewCounterHistory() {

@@ -16,6 +16,14 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
 
+/* Force English Numerals */
+input, select, button, .amount-display, .li-amount, .denom-count, .final-bal, .sum-item span, #totalCounted, #diffStatus, #targetCash, #offBal, #secDue, #sysBal, #dueBal, #phyBal, #sumIn, #sumOut, #finalBalance {
+    font-variant-numeric: lining-nums;
+    -moz-font-feature-settings: "lnum";
+    -webkit-font-feature-settings: "lnum";
+    font-feature-settings: "lnum";
+}
+
 .sr-only {
     position: absolute;
     width: 1px;
@@ -76,7 +84,11 @@ input, select {
     user-select: text;
 }
 
-input:focus { border-color: var(--primary); background: white; }
+input:focus, select:focus { 
+    border-color: var(--primary); 
+    background: white; 
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
 
 button { 
     padding: 12px; 
@@ -84,23 +96,47 @@ button {
     border-radius: 8px; 
     font-weight: 600; 
     cursor: pointer; 
-    transition: 0.2s; 
+    transition: all 0.2s; 
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     font-size: 0.95rem;
+    position: relative;
+    overflow: hidden;
 }
-button:active { transform: scale(0.98); }
+
+button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+button:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+button:active { 
+    transform: scale(0.95); 
+}
 
 #toastContainer {
     position: fixed;
-    bottom: 20px;
+    top: 20px;
     right: 20px;
     z-index: 9999;
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     gap: 10px;
+    max-width: 400px;
 }
 
 .toast {
@@ -128,15 +164,96 @@ button:active { transform: scale(0.98); }
 .toast.info i { color: var(--primary); }
 
 @keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
+    from { transform: translateX(120%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
+}
+
+/* Loading States */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spinner 0.6s linear infinite;
+}
+
+@keyframes spinner {
+    to { transform: rotate(360deg); }
+}
+
+/* Skeleton Loader */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+    border-radius: 4px;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-text {
+    height: 16px;
+    margin-bottom: 8px;
+}
+
+.skeleton-card {
+    height: 100px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+}
+
+.skeleton-list-item {
+    height: 60px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+}
+
+/* Progress Bar */
+.progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #e5e7eb;
+    z-index: 9999;
+    display: none;
+}
+
+.progress-bar.active {
+    display: block;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
+    width: 0%;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
 }
 
 @media (max-width: 600px) {
     #toastContainer {
-        bottom: 10px;
+        top: 10px;
         right: 10px;
-        width: calc(100% - 20px);
+        left: 10px;
+        max-width: unset;
     }
     .toast {
         min-width: unset;

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,7 +31,8 @@
                     speed="1" 
                     style="width: 100%; height: 300px;" 
                     loop 
-                    autoplay>
+                    autoplay
+                    loading="lazy">
                 </lottie-player>
                 <h2>Daily Hisab</h2>
                 <p>Manage your daily cash flow easily</p>
@@ -108,7 +109,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js" defer></script>
     <script src="js/config.js" defer></script>
+    <script src="js/pwa.js" defer></script>
     <script src="js/auth.js" defer></script>
-    <script>if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));</script>
+    <script>if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').then(reg=>{reg.addEventListener('updatefound',()=>{const newWorker=reg.installing;newWorker.addEventListener('statechange',()=>{if(newWorker.state==='installed'&&navigator.serviceWorker.controller){showUpdatePrompt();}});})}));</script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -57,18 +57,18 @@
 
             <div class="counter-grid">
                 <!-- High Denominations -->
-                <div class="denom-row high-val"><span>50k</span> <input type="number" class="denom-input" data-val="50000" oninput="calcDenom()"></div>
-                <div class="denom-row high-val"><span>20k</span> <input type="number" class="denom-input" data-val="20000" oninput="calcDenom()"></div>
-                <div class="denom-row high-val"><span>10k</span> <input type="number" class="denom-input" data-val="10000" oninput="calcDenom()"></div>
+                <div class="denom-row high-val"><span>50k</span> <input type="number" class="denom-input" data-val="50000" inputmode="numeric" pattern="[0-9]*" oninput="throttledCalcDenom()"></div>
+                <div class="denom-row high-val"><span>20k</span> <input type="number" class="denom-input" data-val="20000" inputmode="numeric" pattern="[0-9]*" oninput="throttledCalcDenom()"></div>
+                <div class="denom-row high-val"><span>10k</span> <input type="number" class="denom-input" data-val="10000" inputmode="numeric" pattern="[0-9]*" oninput="throttledCalcDenom()"></div>
                 
                 <!-- Standard Denominations -->
-                <div class="denom-row"><span>500</span> <input type="number" class="denom-input" data-val="500" oninput="calcDenom()"></div>
-                <div class="denom-row"><span>200</span> <input type="number" class="denom-input" data-val="200" oninput="calcDenom()"></div>
-                <div class="denom-row"><span>100</span> <input type="number" class="denom-input" data-val="100" oninput="calcDenom()"></div>
-                <div class="denom-row"><span>50</span> <input type="number" class="denom-input" data-val="50" oninput="calcDenom()"></div>
-                <div class="denom-row"><span>20</span> <input type="number" class="denom-input" data-val="20" oninput="calcDenom()"></div>
-                <div class="denom-row"><span>10</span> <input type="number" class="denom-input" data-val="10" oninput="calcDenom()"></div>
-                <div class="denom-row"><span>Coins</span> <input type="number" class="denom-input" data-val="1" oninput="calcDenom()"></div>
+                <div class="denom-row"><span>500</span> <input type="number" class="denom-input" data-val="500" inputmode="numeric" pattern="[0-9]*" oninput="throttledCalcDenom()"></div>
+                <div class="denom-row"><span>200</span> <input type="number" class="denom-input" data-val="200" inputmode="numeric" pattern="[0-9]*" oninput="throttledCalcDenom()"></div>
+                <div class="denom-row"><span>100</span> <input type="number" class="denom-input" data-val="100" inputmode="numeric" pattern="[0-9]*" oninput="throttledCalcDenom()"></div>
+                <div class="denom-row"><span>50</span> <input type="number" class="denom-input" data-val="50" inputmode="numeric" pattern="[0-9]*" oninput="throttledCalcDenom()"></div>
+                <div class="denom-row"><span>20</span> <input type="number" class="denom-input" data-val="20" inputmode="numeric" pattern="[0-9]*" oninput="throttledCalcDenom()"></div>
+                <div class="denom-row"><span>10</span> <input type="number" class="denom-input" data-val="10" inputmode="numeric" pattern="[0-9]*" oninput="throttledCalcDenom()"></div>
+                <div class="denom-row"><span>Coins</span> <input type="number" class="denom-input" data-val="1" inputmode="numeric" pattern="[0-9]*" oninput="throttledCalcDenom()"></div>
             </div>
             <div class="counter-footer">
                 <div>Total Counted: <b id="totalCounted">₹0</b></div>
@@ -84,7 +84,7 @@
             </div>
             <div class="opening-group">
                 <label class="label-text" for="opening">Opening Balance</label>
-                <input type="number" id="opening" name="opening" value="0" oninput="updateSummary()" aria-label="Opening balance">
+                <input type="number" id="opening" name="opening" value="0" inputmode="numeric" pattern="[0-9]*" oninput="updateSummary()" aria-label="Opening balance">
             </div>
         </div>
 
@@ -98,7 +98,7 @@
                     <label for="inName" class="sr-only">Payer Name</label>
                     <input type="text" id="inName" name="inName" placeholder="Payer Name" autocomplete="off" aria-label="Payer name">
                     <label for="inAmount" class="sr-only">Amount</label>
-                    <input type="number" id="inAmount" name="inAmount" placeholder="Amount" aria-label="Amount received">
+                    <input type="number" id="inAmount" name="inAmount" placeholder="Amount" inputmode="numeric" pattern="[0-9]*" aria-label="Amount received">
                     <button class="btn-add-in" onclick="addTransaction('IN')" aria-label="Add cash received"><i class="ri-add-line" aria-hidden="true"></i></button>
                 </div>
                 <ul id="listIn" class="trans-list"></ul>
@@ -113,7 +113,7 @@
                     <label for="outName" class="sr-only">Receiver / Expense</label>
                     <input type="text" id="outName" name="outName" placeholder="Receiver / Expense" autocomplete="off" aria-label="Receiver or expense name">
                     <label for="outAmount" class="sr-only">Amount</label>
-                    <input type="number" id="outAmount" name="outAmount" placeholder="Amount" aria-label="Amount paid">
+                    <input type="number" id="outAmount" name="outAmount" placeholder="Amount" inputmode="numeric" pattern="[0-9]*" aria-label="Amount paid">
                     <button class="btn-add-out" onclick="addTransaction('OUT')" aria-label="Add cash payment"><i class="ri-add-line" aria-hidden="true"></i></button>
                 </div>
                 <ul id="listOut" class="trans-list"></ul>
@@ -145,6 +145,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
     <script src="js/config.js" defer></script>
+    <script src="js/pwa.js" defer></script>
     <script src="js/share-image.js" defer></script>
     <script src="js/dashboard.js" defer></script>
     <script>function prepareImageShare(){const d={date:document.getElementById('date').value,opening:parseFloat(document.getElementById('opening').value)||0,transactions:transactions,totalIn:transactions.filter(t=>t.t_type==='IN').reduce((s,t)=>s+t.amount,0),totalOut:transactions.filter(t=>t.t_type==='OUT').reduce((s,t)=>s+t.amount,0),finalBalance:parseFloat(document.getElementById('finalBalance').innerText.replace(/[^0-9.-]+/g,""))};shareReportAsImage(d);}if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));</script>

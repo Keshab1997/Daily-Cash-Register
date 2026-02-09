@@ -2,6 +2,11 @@
 
 async function shareReportAsImage(data) {
     const { date, opening, transactions, totalIn, totalOut, finalBalance } = data;
+    
+    const btn = document.querySelector('.btn-image');
+    setButtonLoading(btn, true);
+    showProgress(20);
+    showToast('Generating image...', 'info');
 
     const voucher = document.createElement('div');
     voucher.id = 'hiddenVoucher';
@@ -30,7 +35,6 @@ async function shareReportAsImage(data) {
         
         <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px;">
             <span><b>Date:</b> ${date}</span>
-            <span><b>Opening:</b> ₹${opening.toLocaleString('en-IN')}</span>
         </div>
 
         <div style="margin-bottom: 20px;">
@@ -39,6 +43,10 @@ async function shareReportAsImage(data) {
         </div>
 
         <div style="background: #f9fafb; padding: 15px; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">
+                <span>Opening Balance:</span>
+                <span style="font-weight: 600; color: #6b7280;">₹${opening.toLocaleString('en-IN')}</span>
+            </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px;">
                 <span>Total Received:</span>
                 <span style="color: #059669; font-weight: 600;">+ ₹${totalIn.toLocaleString('en-IN')}</span>
@@ -61,7 +69,9 @@ async function shareReportAsImage(data) {
     document.body.appendChild(voucher);
 
     try {
+        showProgress(50);
         const canvas = await html2canvas(voucher, { scale: 2 });
+        showProgress(80);
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         if (isMobile && navigator.share) {
@@ -72,15 +82,21 @@ async function shareReportAsImage(data) {
                 title: 'Daily Hisab Report',
                 text: `Cash Report for ${date}`
             });
+            showToast('Image shared successfully!', 'success');
         } else {
             const link = document.createElement('a');
             link.download = `Hisab_Report_${date}.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
+            showToast('Image downloaded!', 'success');
         }
     } catch (err) {
         console.error("Error:", err);
+        showToast('Error generating image', 'error');
     } finally {
         document.body.removeChild(voucher);
+        showProgress(100);
+        hideProgress();
+        setButtonLoading(btn, false);
     }
 }

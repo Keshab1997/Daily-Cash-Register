@@ -24,7 +24,31 @@ document.getElementById('sDate').value = getISTDate();
 await loadAllData();
 await loadSuggestions();
 setupCustomDropdown();
+setupKeyboardNavigation();
 };
+
+function setupKeyboardNavigation() {
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeDueModal();
+            document.getElementById('purposeDropdown')?.classList.remove('active');
+            document.getElementById('nameDropdown')?.classList.remove('active');
+        }
+        if (e.key === 'Enter' && (document.activeElement.id === 'sDate' || 
+            document.activeElement.id === 'sPurpose' || 
+            document.activeElement.id === 'sName' || 
+            document.activeElement.id === 'sAmount')) {
+            e.preventDefault();
+            const inputs = ['sDate', 'sPurpose', 'sName', 'sAmount'];
+            const currentIndex = inputs.indexOf(document.activeElement.id);
+            if (currentIndex < inputs.length - 1) {
+                document.getElementById(inputs[currentIndex + 1]).focus();
+            } else {
+                document.querySelector('.btn-take').focus();
+            }
+        }
+    });
+}
 
 async function loadAllData() {
 currentSystemBalance = await calculateSystemBalance();
@@ -64,15 +88,26 @@ return baseBalance + adjustment;
 }
 
 async function fetchSecretData() {
+const list = document.getElementById('secretList');
+const loader = document.getElementById('secretLoader');
+const noData = document.getElementById('noSecretData');
+
+list.style.display = 'none';
+loader.style.display = 'block';
+noData.style.display = 'none';
+
 const { data, error } = await _supabase.from('secret_box')
 .select('*')
 .eq('user_id', currentUser.id)
 .order('created_at', { ascending: false });
 
+loader.style.display = 'none';
+
 if (!error) {
     allSecretData = data || [];
     renderSecretList(allSecretData.slice(0, 5));
     calculateCards();
+    list.style.display = 'block';
 }
 }
 
@@ -189,10 +224,10 @@ function setupCustomDropdown() {
     nameInput.parentElement.appendChild(nameDropdown);
     
     purposeInput.addEventListener('input', (e) => {
-        showSuggestions(e.target, purposeDropdown, allPurposeSuggestions);
+        debouncedShowSuggestions(e.target, purposeDropdown, allPurposeSuggestions);
         handleAutoFill();
     });
-    nameInput.addEventListener('input', (e) => showSuggestions(e.target, nameDropdown, allNameSuggestions));
+    nameInput.addEventListener('input', (e) => debouncedShowSuggestions(e.target, nameDropdown, allNameSuggestions));
     
     purposeInput.addEventListener('focus', (e) => showSuggestions(e.target, purposeDropdown, allPurposeSuggestions));
     nameInput.addEventListener('focus', (e) => showSuggestions(e.target, nameDropdown, allNameSuggestions));
@@ -221,6 +256,8 @@ function showSuggestions(input, dropdown, suggestions) {
     dropdown.classList.add('active');
 }
 
+const debouncedShowSuggestions = debounce(showSuggestions, 200);
+
 function selectSuggestion(inputId, value) {
     document.getElementById(inputId).value = value;
     document.getElementById(inputId === 'sPurpose' ? 'purposeDropdown' : 'nameDropdown').classList.remove('active');
@@ -243,8 +280,12 @@ const purpose = document.getElementById('sPurpose').value.trim();
 const amount = parseFloat(document.getElementById('sAmount').value);
 
 if (!date || !name || !purpose || !amount || amount <= 0) {
-    return alert("Please fill all fields correctly.");
+    return showToast("Please fill all fields correctly.", 'error');
 }
+
+const btn = type === 'TAKE' ? document.querySelector('.btn-take') : document.querySelector('.btn-return');
+setButtonLoading(btn, true);
+showProgress(30);
 
 if (type === 'RETURN') {
     const { data: personData } = await _supabase.from('secret_box')
@@ -263,7 +304,9 @@ if (type === 'RETURN') {
     }
     
     if (amount > currentBalance) {
-        return alert(`❌ Cannot return ₹${amount}!\n\nCurrent due: ₹${currentBalance.toFixed(2)}\nYou can only return up to ₹${currentBalance.toFixed(2)}`);
+        setButtonLoading(btn, false);
+        hideProgress();
+        return showToast(`❌ Cannot return ₹${amount}!\n\nCurrent due: ₹${currentBalance.toFixed(2)}`, 'error');
     }
     
     let remainingReturn = amount;
@@ -281,12 +324,16 @@ if (type === 'RETURN') {
             .update({ remaining_amount: newRemaining })
             .eq('id', entry.id);
         
-        if (error) return alert("Error: " + error.message);
+        if (error) {
+            setButtonLoading(btn, false);
+            hideProgress();
+            return showToast("Error: " + error.message, 'error');
+        }
         
         remainingReturn -= deduction;
     }
     
-    alert(`✅ ₹${amount} returned successfully!`);
+    showToast(`✅ ₹${amount} returned successfully!`, 'success');
 } else {
     const payload = {
         user_id: currentUser.id,
@@ -299,14 +346,22 @@ if (type === 'RETURN') {
     };
     
     const { error } = await _supabase.from('secret_box').insert(payload);
-    if (error) return alert("Error: " + error.message);
+    if (error) {
+        setButtonLoading(btn, false);
+        hideProgress();
+        return showToast("Error: " + error.message, 'error');
+    }
 }
 
+showProgress(70);
 document.getElementById('sName').value = '';
 document.getElementById('sPurpose').value = '';
 document.getElementById('sAmount').value = '';
 await loadAllData();
 await loadSuggestions();
+showProgress(100);
+hideProgress();
+setButtonLoading(btn, false);
 }
 
 // --- Due Summary Logic ---

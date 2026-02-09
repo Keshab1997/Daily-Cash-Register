@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hisab-manager-v9';
+const CACHE_NAME = 'hisab-manager-v11';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -24,6 +24,7 @@ const ASSETS_TO_CACHE = [
     './js/box.js',
     './js/secret_history.js',
     './js/share-image.js',
+    './js/pwa.js',
     'https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css',
     'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
     'https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js',
@@ -53,7 +54,12 @@ self.addEventListener('activate', (event) => {
                     }
                 })
             );
-        }).then(() => self.clients.claim())
+        }).then(() => {
+            self.clients.claim();
+            return self.clients.matchAll();
+        }).then((clients) => {
+            clients.forEach(client => client.postMessage({ type: 'UPDATE_AVAILABLE' }));
+        })
     );
 });
 

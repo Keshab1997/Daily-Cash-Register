@@ -5,11 +5,32 @@ function toggleForms() {
     if (loginForm.classList.contains('hidden')) {
         loginForm.classList.remove('hidden');
         signupForm.classList.add('hidden');
+        setTimeout(() => document.getElementById('email').focus(), 100);
     } else {
         loginForm.classList.add('hidden');
         signupForm.classList.remove('hidden');
+        setTimeout(() => document.getElementById('regEmail').focus(), 100);
     }
 }
+
+// Keyboard Navigation
+document.addEventListener('keydown', (e) => {
+    // Enter key on login form
+    if (e.key === 'Enter' && !document.getElementById('loginForm').classList.contains('hidden')) {
+        if (document.activeElement.id === 'email' || document.activeElement.id === 'password') {
+            e.preventDefault();
+            login();
+        }
+    }
+    
+    // Enter key on signup form
+    if (e.key === 'Enter' && !document.getElementById('signupForm').classList.contains('hidden')) {
+        if (document.activeElement.id === 'regEmail' || document.activeElement.id === 'regPassword') {
+            e.preventDefault();
+            signup();
+        }
+    }
+});
 
 async function login() {
     const email = document.getElementById('email').value;
@@ -21,8 +42,8 @@ async function login() {
         return;
     }
 
-    btn.innerHTML = "Logging in...";
-    btn.disabled = true;
+    setButtonLoading(btn, true);
+    showProgress(50);
 
     const { data, error } = await _supabase.auth.signInWithPassword({
         email: email, password: pass
@@ -30,9 +51,10 @@ async function login() {
 
     if (error) {
         showToast("Login failed: " + error.message, 'error');
-        btn.innerHTML = "Login";
-        btn.disabled = false;
+        setButtonLoading(btn, false);
+        hideProgress();
     } else {
+        showProgress(100);
         window.location.href = 'dashboard.html';
     }
 }
@@ -51,8 +73,8 @@ async function signup() {
         return;
     }
 
-    btn.innerHTML = "Creating account...";
-    btn.disabled = true;
+    setButtonLoading(btn, true);
+    showProgress(50);
 
     const { data, error } = await _supabase.auth.signUp({
         email: email, password: pass
@@ -60,9 +82,11 @@ async function signup() {
 
     if (error) {
         showToast("Error: " + error.message, 'error');
-        btn.innerHTML = "Sign Up";
-        btn.disabled = false;
+        setButtonLoading(btn, false);
+        hideProgress();
     } else {
+        showProgress(100);
+        hideProgress();
         document.getElementById('signupForm').classList.add('hidden');
         document.getElementById('verifyMsg').classList.remove('hidden');
         document.getElementById('sentEmail').innerText = email;

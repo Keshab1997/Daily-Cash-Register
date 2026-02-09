@@ -161,10 +161,12 @@ input[type="date"]::-webkit-datetime-edit-year-field {
 .final-bal { font-size: 1.8rem !important; color: #34d399; }
 
 .action-buttons { display: flex; gap: 15px; margin-top: 20px; justify-content: flex-end; }
-.btn-whatsapp { background: #25D366; color: white; width: auto; padding: 12px 25px; }
-.btn-save { background: var(--primary); color: white; width: auto; padding: 12px 25px; }
-
-.btn-image { background: #8b5cf6; color: white; width: auto; padding: 12px 25px; }
+.btn-whatsapp { background: #25D366; color: white; width: auto; padding: 12px 25px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3); }
+.btn-whatsapp:hover { background: #20bd5a; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4); }
+.btn-save { background: var(--primary); color: white; width: auto; padding: 12px 25px; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3); }
+.btn-save:hover { background: var(--primary-dark); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4); }
+.btn-image { background: #8b5cf6; color: white; width: auto; padding: 12px 25px; box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3); }
+.btn-image:hover { background: #7c3aed; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4); }
 
 /* Cash Counter Styles */
 .cash-counter-box {

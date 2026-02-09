@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -74,7 +74,7 @@
             </div>
             <div class="inp-grp">
                 <label>Amount</label>
-                <input type="number" id="sAmount" placeholder="₹ Amount">
+                <input type="number" id="sAmount" placeholder="₹ Amount" inputmode="numeric" pattern="[0-9]*">
             </div>
         </div>
         
@@ -96,6 +96,11 @@
             </a>
         </div>
         <ul id="secretList" class="secret-list"></ul>
+        <div id="secretLoader" style="display:none;">
+            <div class="skeleton skeleton-list-item"></div>
+            <div class="skeleton skeleton-list-item"></div>
+            <div class="skeleton skeleton-list-item"></div>
+        </div>
         <div id="noSecretData" class="no-data-msg" style="display:none;">No recent activity.</div>
     </div>
 </div>
@@ -123,6 +128,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="js/config.js" defer></script>
+<script src="js/pwa.js" defer></script>
 <script src="js/box.js" defer></script>
 <script>if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');</script>
 </body>

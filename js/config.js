@@ -3,15 +3,92 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Progress Bar
+let progressBar = null;
+let progressFill = null;
+
+function initProgressBar() {
+    if (!progressBar) {
+        progressBar = document.createElement('div');
+        progressBar.className = 'progress-bar';
+        progressFill = document.createElement('div');
+        progressFill.className = 'progress-bar-fill';
+        progressBar.appendChild(progressFill);
+        document.body.appendChild(progressBar);
+    }
+}
+
+function showProgress(percent = 0) {
+    initProgressBar();
+    progressBar.classList.add('active');
+    progressFill.style.width = percent + '%';
+}
+
+function hideProgress() {
+    if (progressBar) {
+        progressFill.style.width = '100%';
+        setTimeout(() => {
+            progressBar.classList.remove('active');
+            progressFill.style.width = '0%';
+        }, 300);
+    }
+}
+
+// Button Loading State
+function setButtonLoading(button, loading = true) {
+    if (loading) {
+        button.disabled = true;
+        button.classList.add('btn-loading');
+        button.dataset.originalText = button.innerHTML;
+        button.innerHTML = '';
+    } else {
+        button.disabled = false;
+        button.classList.remove('btn-loading');
+        if (button.dataset.originalText) {
+            button.innerHTML = button.dataset.originalText;
+        }
+    }
+}
+
+// Debounce utility
+function debounce(func, wait = 300) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Throttle utility
+function throttle(func, limit = 100) {
+    let inThrottle;
+    return function(...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
 async function checkAuth(required = true) {
+    showProgress(30);
     const { data: { session } } = await _supabase.auth.getSession();
+    showProgress(70);
     
     if (required && !session) {
+        hideProgress();
         window.location.href = 'index.html';
     }
     if (!required && session) {
+        hideProgress();
         window.location.href = 'dashboard.html';
     }
+    hideProgress();
     return session;
 }
 
