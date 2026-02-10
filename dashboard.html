@@ -21,9 +21,10 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet" media="all">
 </head>
 <body>
+    <main>
     <div class="container">
         <div class="navbar">
-            <a href="dashboard.html" class="brand">
+            <a href="dashboard.html" class="brand" aria-label="Hisab Manager Home">
                 <i class="ri-wallet-3-line"></i>
                 <h2>Hisab Manager</h2>
             </a>
@@ -141,6 +142,7 @@
             <button class="btn-save" onclick="saveDayEnd()" aria-label="Save day end report"><i class="ri-save-3-line" aria-hidden="true"></i> <span class="btn-label">Save Day End <small class="shortcut-text">[Alt+S]</small></span></button>
         </div>
     </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>

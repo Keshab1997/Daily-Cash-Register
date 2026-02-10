@@ -19,8 +19,8 @@ function showInstallPrompt() {
                 <strong>Install App</strong>
                 <p style="margin: 0; font-size: 0.85rem; opacity: 0.9;">Install for better experience</p>
             </div>
-            <button onclick="installApp()" style="background: white; color: #2563eb; padding: 8px 16px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;">Install</button>
-            <button onclick="dismissInstall()" style="background: transparent; color: white; border: none; font-size: 1.2rem; cursor: pointer;"><i class="ri-close-line"></i></button>
+            <button onclick="installApp()" style="background: white; color: #2563eb; padding: 8px 16px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;" aria-label="Install application">Install</button>
+            <button onclick="dismissInstall()" style="background: transparent; color: white; border: none; font-size: 1.2rem; cursor: pointer;" aria-label="Dismiss install prompt"><i class="ri-close-line"></i></button>
         </div>
     `;
     installBanner.style.cssText = `
@@ -68,8 +68,8 @@ function showUpdatePrompt() {
                 <strong>Update Available</strong>
                 <p style="margin: 0; font-size: 0.85rem; opacity: 0.9;">New version ready</p>
             </div>
-            <button onclick="updateApp()" style="background: white; color: #059669; padding: 8px 16px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;">Update</button>
-            <button onclick="dismissUpdate()" style="background: transparent; color: white; border: none; font-size: 1.2rem; cursor: pointer;"><i class="ri-close-line"></i></button>
+            <button onclick="updateApp()" style="background: white; color: #059669; padding: 8px 16px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;" aria-label="Update application">Update</button>
+            <button onclick="dismissUpdate()" style="background: transparent; color: white; border: none; font-size: 1.2rem; cursor: pointer;" aria-label="Dismiss update notification"><i class="ri-close-line"></i></button>
         </div>
     `;
     updateBanner.style.cssText = `

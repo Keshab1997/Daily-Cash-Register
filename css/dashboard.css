@@ -80,8 +80,8 @@ input[type="date"]::-webkit-datetime-edit-year-field {
     border-bottom: 1px solid var(--border);
     display: flex; justify-content: space-between;
 }
-.text-green { color: var(--success); }
-.text-red { color: var(--danger); }
+.text-green { color: #047857; }
+.text-red { color: #b91c1c; }
 
 .input-group { padding: 15px; display: flex; gap: 10px; background: #f9fafb; border-bottom: 1px solid var(--border); position: relative; }
 .input-group input[type="text"] { flex: 2; }
@@ -142,7 +142,7 @@ input[type="date"]::-webkit-datetime-edit-year-field {
 .amount-display { font-family: 'Courier New', monospace; font-weight: 700; }
 
 .summary-box { 
-    background: #1f2937; 
+    background: #1e293b; 
     color: white; 
     padding: 20px; 
     border-radius: 12px; 
