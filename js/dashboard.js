@@ -615,5 +615,5 @@ async function saveCounterHistory() {
 }
 
 function viewCounterHistory() {
-    window.open('counter_history.html', '_blank');
+    window.location.href = 'counter_history.html';
 }
