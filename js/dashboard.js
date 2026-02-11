@@ -207,8 +207,17 @@ async function checkAutoDayEnd() {
 }
 
 function sendNotification(title, body) {
-    if (Notification.permission === "granted") {
-        new Notification(title, { body: body });
+    if ('serviceWorker' in navigator && Notification.permission === "granted") {
+        navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification(title, {
+                body: body,
+                icon: 'https://cdn-icons-png.flaticon.com/512/18062/18062856.png',
+                badge: 'https://cdn-icons-png.flaticon.com/512/18062/18062856.png',
+                vibrate: [200, 100, 200]
+            });
+        }).catch(err => {
+            console.log('Notification error:', err);
+        });
     }
 }
 
