@@ -464,6 +464,11 @@ async function saveDayEnd() {
     const date = document.getElementById('date').value;
     const opening = parseFloat(document.getElementById('opening').value) || 0;
     
+    if (!currentUser || !currentUser.id) {
+        showToast('User not logged in. Please refresh.', 'error');
+        return;
+    }
+    
     let totalIn = transactions.filter(t => t.t_type === 'IN').reduce((sum, t) => sum + t.amount, 0);
     let totalOut = transactions.filter(t => t.t_type === 'OUT').reduce((sum, t) => sum + t.amount, 0);
     const final = (opening + totalIn) - totalOut;
@@ -484,22 +489,31 @@ async function saveDayEnd() {
     }
     showProgress(50);
 
-    const { error } = await _supabase.from('daily_accounts')
-        .upsert(summaryPayload, { onConflict: 'user_id, report_date' });
+    try {
+        const { data, error } = await _supabase.from('daily_accounts')
+            .upsert(summaryPayload, { onConflict: 'user_id, report_date' });
 
-    if(error) {
-        showToast('Error: ' + error.message, 'error');
-    } else {
-        sendNotification("✅ Saved", "Day End report saved successfully!");
-        showToast('✅ Day End Saved Successfully!', 'success');
-    }
-    
-    showProgress(100);
-    hideProgress();
-    
-    if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="ri-save-3-line"></i> <span class="btn-label">Save Day End <small class="shortcut-text">[Alt+S]</small></span>';
+        if(error) {
+            console.error('Save error:', error);
+            showToast('Error: ' + error.message, 'error');
+        } else {
+            console.log('Saved successfully:', data);
+            sendNotification("✅ Saved", "Day End report saved successfully!");
+            showToast('✅ Day End Saved Successfully!', 'success');
+        }
+    } catch (err) {
+        console.error('Catch error:', err);
+        showToast('Network error: ' + err.message, 'error');
+    } finally {
+        showProgress(100);
+        setTimeout(() => hideProgress(), 300);
+        
+        if (btn) {
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ri-save-3-line"></i> <span class="btn-label">Save Day End <small class="shortcut-text">[Alt+S]</small></span>';
+            }, 500);
+        }
     }
 }
 
