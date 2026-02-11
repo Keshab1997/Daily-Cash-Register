@@ -2,6 +2,7 @@ let currentUser = null;
 let transactions = [];
 let secretDueAmount = 0;
 let allSuggestions = [];
+let notify = null;
 
 const getISTDate = () => {
     const now = new Date();
@@ -76,13 +77,19 @@ function throttle(func, limit) {
     };
 }
 
+// Initialize Notification Helper
+function initNotifications() {
+    if (typeof PWANotification !== 'undefined') {
+        notify = new PWANotification('Hisab Manager', 'https://cdn-icons-png.flaticon.com/512/18062/18062856.png');
+        notify.requestPermission();
+    }
+}
+
 window.onload = async () => {
     const session = await checkAuth(true);
     currentUser = session.user;
     
-    if (Notification.permission !== "granted") {
-        Notification.requestPermission();
-    }
+    initNotifications();
 
     const dateInput = document.getElementById('date');
     if (!dateInput.value) {
@@ -207,17 +214,8 @@ async function checkAutoDayEnd() {
 }
 
 function sendNotification(title, body) {
-    if ('serviceWorker' in navigator && Notification.permission === "granted") {
-        navigator.serviceWorker.ready.then(registration => {
-            registration.showNotification(title, {
-                body: body,
-                icon: 'https://cdn-icons-png.flaticon.com/512/18062/18062856.png',
-                badge: 'https://cdn-icons-png.flaticon.com/512/18062/18062856.png',
-                vibrate: [200, 100, 200]
-            });
-        }).catch(err => {
-            console.log('Notification error:', err);
-        });
+    if (notify) {
+        notify.success(title, body);
     }
 }
 
