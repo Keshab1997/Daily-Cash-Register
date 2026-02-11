@@ -4,7 +4,10 @@ let secretDueAmount = 0;
 let allSuggestions = [];
 
 const getISTDate = () => {
-    return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    const now = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istTime = new Date(now.getTime() + istOffset);
+    return istTime.toISOString().split('T')[0];
 };
 
 const formatCurrency = (amount) => {
@@ -13,6 +16,65 @@ const formatCurrency = (amount) => {
         currency: 'INR'
     }).format(amount);
 };
+
+// Helper Functions
+function setButtonLoading(btn, isLoading) {
+    if (!btn) return;
+    if (isLoading) {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.innerHTML = '<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i> ' + btn.innerHTML.replace(/<i[^>]*><\/i>\s*/, '');
+    } else {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    }
+}
+
+function showToast(msg, type = 'info') {
+    const colors = { success: '#10b981', error: '#ef4444', info: '#3b82f6' };
+    const toast = document.createElement('div');
+    toast.style.cssText = `position:fixed;top:20px;right:20px;background:${colors[type]};color:white;padding:15px 20px;border-radius:8px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.15);`;
+    toast.innerText = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+function showProgress(percent) {
+    let bar = document.getElementById('progressBar');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'progressBar';
+        bar.style.cssText = 'position:fixed;top:0;left:0;width:0%;height:3px;background:#10b981;z-index:9999;transition:width 0.3s;';
+        document.body.appendChild(bar);
+    }
+    bar.style.width = percent + '%';
+}
+
+function hideProgress() {
+    setTimeout(() => {
+        const bar = document.getElementById('progressBar');
+        if (bar) bar.remove();
+    }, 500);
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+function throttle(func, limit) {
+    let inThrottle;
+    return function(...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
 
 window.onload = async () => {
     const session = await checkAuth(true);
@@ -160,51 +222,36 @@ async function fetchOpeningBalance() {
         return;
     }
     
+    // First check if there's a saved record for this date
     const { data: savedDay } = await _supabase.from('daily_accounts')
         .select('opening_balance')
         .eq('user_id', currentUser.id)
         .eq('report_date', selectedDate)
-        .limit(1);
+        .single();
     
-    if (savedDay && savedDay.length > 0) {
-        openingInput.value = savedDay[0].opening_balance || 0;
+    if (savedDay && savedDay.opening_balance !== null) {
+        openingInput.value = savedDay.opening_balance || 0;
         openingInput.style.background = '#fef3c7';
         setTimeout(() => openingInput.style.background = '', 1000);
         updateSummary();
         return;
     }
     
+    // Get last saved day's closing balance
     const { data: lastSavedDay } = await _supabase.from('daily_accounts')
         .select('report_date, petty_cash')
         .eq('user_id', currentUser.id)
         .lt('report_date', selectedDate)
         .order('report_date', { ascending: false })
-        .limit(1);
+        .limit(1)
+        .single();
 
-    let baseBalance = 0;
-    let lastSavedDate = '1900-01-01';
+    let finalOpening = 0;
 
-    if (lastSavedDay && lastSavedDay.length > 0) {
-        baseBalance = parseFloat(lastSavedDay[0].petty_cash) || 0;
-        lastSavedDate = lastSavedDay[0].report_date;
+    if (lastSavedDay && lastSavedDay.petty_cash !== null) {
+        finalOpening = parseFloat(lastSavedDay.petty_cash) || 0;
     }
 
-    const { data: pendingTrans } = await _supabase.from('transactions')
-        .select('amount, t_type')
-        .eq('user_id', currentUser.id)
-        .gt('t_date', lastSavedDate)
-        .lt('t_date', selectedDate);
-
-    let adjustment = 0;
-    if (pendingTrans && pendingTrans.length > 0) {
-        pendingTrans.forEach(t => {
-            const amt = parseFloat(t.amount) || 0;
-            if (t.t_type === 'IN') adjustment += amt;
-            else adjustment -= amt;
-        });
-    }
-
-    const finalOpening = baseBalance + adjustment;
     openingInput.value = finalOpening;
     
     if (finalOpening > 0) {
@@ -431,7 +478,10 @@ async function saveDayEnd() {
     };
 
     const btn = document.querySelector('.btn-save');
-    setButtonLoading(btn, true);
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i> Saving...';
+    }
     showProgress(50);
 
     const { error } = await _supabase.from('daily_accounts')
@@ -446,7 +496,11 @@ async function saveDayEnd() {
     
     showProgress(100);
     hideProgress();
-    setButtonLoading(btn, false);
+    
+    if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ri-save-3-line"></i> <span class="btn-label">Save Day End <small class="shortcut-text">[Alt+S]</small></span>';
+    }
 }
 
 // --- মালিকের জন্য বিস্তারিত হোয়াটসঅ্যাপ রিপোর্ট ---
