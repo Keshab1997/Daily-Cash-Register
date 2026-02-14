@@ -36,16 +36,20 @@ function hideProgress() {
 
 // Button Loading State
 function setButtonLoading(button, loading = true) {
+    if (!button) return;
     if (loading) {
+        if (!button.dataset.originalHtml) {
+            button.dataset.originalHtml = button.innerHTML;
+        }
         button.disabled = true;
         button.classList.add('btn-loading');
-        button.dataset.originalText = button.innerHTML;
         button.innerHTML = '';
     } else {
         button.disabled = false;
         button.classList.remove('btn-loading');
-        if (button.dataset.originalText) {
-            button.innerHTML = button.dataset.originalText;
+        if (button.dataset.originalHtml) {
+            button.innerHTML = button.dataset.originalHtml;
+            delete button.dataset.originalHtml;
         }
     }
 }

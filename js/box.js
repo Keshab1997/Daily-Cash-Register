@@ -122,55 +122,26 @@ if (data.length === 0) {
 }
 noData.style.display = 'none';
 
-const personBalance = {};
-const personLastDate = {};
-const personPurpose = {};
-
 data.forEach(item => {
-    const name = item.party_name || 'Unknown';
-    if (!personBalance[name]) {
-        personBalance[name] = 0;
-        personLastDate[name] = item.t_date;
-        personPurpose[name] = item.description;
-    }
-    
-    if (item.t_type === 'TAKE') {
-        const rem = parseFloat(item.remaining_amount);
-        if (!isNaN(rem)) {
-            personBalance[name] += rem;
-        }
-    }
-    
-    if (item.t_date > personLastDate[name]) {
-        personLastDate[name] = item.t_date;
-    }
-});
+    const isTake = item.t_type === 'TAKE';
+    const typeClass = isTake ? 'type-take' : 'type-return';
+    const typeLabel = isTake ? 'TAKE' : 'RETURN';
+    const amountColor = isTake ? '#ef4444' : '#10b981';
 
-const personList = Object.entries(personBalance)
-    .filter(([_, balance]) => balance > 0.01)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-
-if (personList.length === 0) {
-    noData.style.display = 'block';
-    return;
-}
-
-personList.forEach(([name, balance]) => {
     const li = `
         <li>
             <div class="li-left">
                 <div class="li-desc">
-                    <span class="li-name">${name}</span>
-                    <span>- ${personPurpose[name]}</span>
+                    <span class="li-name">${item.party_name || 'Unknown'}</span>
+                    <span>- ${item.description}</span>
                 </div>
-                <span class="li-date">${personLastDate[name]}</span>
+                <span class="li-date">${item.t_date}</span>
             </div>
             <div class="li-right">
-                <span class="li-amount" style="color: #ef4444">
-                    ${formatCurrency(balance)}
+                <span class="li-amount" style="color: ${amountColor}">
+                    ${formatCurrency(item.amount)}
                 </span>
-                <span class="li-type type-take">DUE</span>
+                <span class="li-type ${typeClass}">${typeLabel}</span>
             </div>
         </li>
     `;

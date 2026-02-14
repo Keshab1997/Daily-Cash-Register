@@ -22,12 +22,19 @@ const formatCurrency = (amount) => {
 function setButtonLoading(btn, isLoading) {
     if (!btn) return;
     if (isLoading) {
+        if (!btn.dataset.originalHtml) {
+            btn.dataset.originalHtml = btn.innerHTML;
+        }
         btn.disabled = true;
         btn.style.opacity = '0.6';
-        btn.innerHTML = '<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i> ' + btn.innerHTML.replace(/<i[^>]*><\/i>\s*/, '');
+        btn.innerHTML = '<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i>';
     } else {
         btn.disabled = false;
         btn.style.opacity = '1';
+        if (btn.dataset.originalHtml) {
+            btn.innerHTML = btn.dataset.originalHtml;
+            delete btn.dataset.originalHtml;
+        }
     }
 }
 

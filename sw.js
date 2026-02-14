@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hisab-manager-v21';
+const CACHE_NAME = 'hisab-manager-v24';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
