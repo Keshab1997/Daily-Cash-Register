@@ -193,6 +193,9 @@ async function deleteSelected() {
     if (selectedIds.length === 0) return;
     if (!confirm(`Are you sure you want to delete ${selectedIds.length} items?`)) return;
 
+    const dates = filteredData.filter(item => selectedIds.includes(item.id)).map(i => i.t_date);
+    const oldestDate = dates.sort()[0];
+
     const { error } = await _supabase.from('transactions')
         .delete()
         .in('id', selectedIds);
@@ -205,6 +208,10 @@ async function deleteSelected() {
         document.getElementById('selectAll').checked = false;
         updateBulkDeleteUI();
         applyFilters();
+        
+        if (oldestDate && typeof recalculateFutureBalances === 'function') {
+            await recalculateFutureBalances(oldestDate);
+        }
     }
 }
 
@@ -343,4 +350,62 @@ async function shareDayAsImage(date) {
     };
 
     shareReportAsImage(data);
+}
+
+// --- Ripple Update Function (imported from dashboard) ---
+async function recalculateFutureBalances(startDate) {
+    console.log("Cascading Sync started from:", startDate);
+
+    try {
+        const { data: prevDay } = await _supabase
+            .from('daily_accounts')
+            .select('petty_cash')
+            .eq('user_id', currentUser.id)
+            .lt('report_date', startDate)
+            .order('report_date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        let runningBalance = prevDay ? parseFloat(prevDay.petty_cash) : 0;
+
+        const { data: allDays } = await _supabase
+            .from('daily_accounts')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .gte('report_date', startDate)
+            .order('report_date', { ascending: true });
+
+        const { data: allTrans } = await _supabase
+            .from('transactions')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .gte('t_date', startDate);
+
+        if (!allDays || allDays.length === 0) return;
+
+        for (const day of allDays) {
+            const currentDate = day.report_date;
+            const dayTrans = allTrans.filter(t => t.t_date === currentDate);
+            const totalIn = dayTrans.filter(t => t.t_type === 'IN').reduce((s, t) => s + t.amount, 0);
+            const totalOut = dayTrans.filter(t => t.t_type === 'OUT').reduce((s, t) => s + t.amount, 0);
+
+            const newOpening = runningBalance;
+            const newClosing = (newOpening + totalIn) - totalOut;
+
+            await _supabase.from('daily_accounts').upsert({
+                user_id: currentUser.id,
+                report_date: currentDate,
+                opening_balance: newOpening,
+                cash_received: totalIn,
+                handover_client: totalOut,
+                petty_cash: newClosing
+            }, { onConflict: 'user_id, report_date' });
+
+            runningBalance = newClosing;
+        }
+
+        console.log("✅ Cascading Sync Completed!");
+    } catch (err) {
+        console.error("Sync Error:", err);
+    }
 }

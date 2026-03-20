@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hisab-manager-v24';
+const CACHE_NAME = 'hisab-manager-v30';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -64,13 +64,22 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+    // Skip caching for POST, PUT, DELETE requests
+    if (event.request.method !== 'GET') {
+        event.respondWith(fetch(event.request));
+        return;
+    }
+
     event.respondWith(
         fetch(event.request)
             .then((response) => {
-                const responseClone = response.clone();
-                caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, responseClone);
-                });
+                // Only cache successful GET responses
+                if (response && response.status === 200) {
+                    const responseClone = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseClone);
+                    });
+                }
                 return response;
             })
             .catch(() => {

@@ -236,41 +236,34 @@ async function fetchOpeningBalance() {
         return;
     }
     
-    // First check if there's a saved record for this date
+    // ১. প্রথমে চেক করো এই তারিখের জন্য অলরেডি কোনো সেভ করা ওপেনিং ব্যালেন্স আছে কি না
     const { data: savedDay } = await _supabase.from('daily_accounts')
         .select('opening_balance')
         .eq('user_id', currentUser.id)
         .eq('report_date', selectedDate)
-        .single();
+        .maybeSingle();
     
-    if (savedDay && savedDay.opening_balance !== null) {
-        openingInput.value = savedDay.opening_balance || 0;
+    if (savedDay && savedDay.opening_balance !== null && savedDay.opening_balance !== undefined) {
+        openingInput.value = savedDay.opening_balance;
         openingInput.style.background = '#fef3c7';
         setTimeout(() => openingInput.style.background = '', 1000);
-        updateSummary();
-        return;
-    }
-    
-    // Get last saved day's closing balance
-    const { data: lastSavedDay } = await _supabase.from('daily_accounts')
-        .select('report_date, petty_cash')
-        .eq('user_id', currentUser.id)
-        .lt('report_date', selectedDate)
-        .order('report_date', { ascending: false })
-        .limit(1)
-        .single();
+    } else {
+        // ২. যদি না থাকে, তবে আগের দিনের ক্লোজিং ব্যালেন্স নিয়ে এসো
+        const { data: lastSavedDay } = await _supabase.from('daily_accounts')
+            .select('petty_cash')
+            .eq('user_id', currentUser.id)
+            .lt('report_date', selectedDate)
+            .order('report_date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
-    let finalOpening = 0;
-
-    if (lastSavedDay && lastSavedDay.petty_cash !== null) {
-        finalOpening = parseFloat(lastSavedDay.petty_cash) || 0;
-    }
-
-    openingInput.value = finalOpening;
-    
-    if (finalOpening > 0) {
-        openingInput.style.background = '#d1fae5';
-        setTimeout(() => openingInput.style.background = '', 1000);
+        const finalOpening = lastSavedDay ? parseFloat(lastSavedDay.petty_cash) || 0 : 0;
+        openingInput.value = finalOpening;
+        
+        if (finalOpening > 0) {
+            openingInput.style.background = '#d1fae5';
+            setTimeout(() => openingInput.style.background = '', 1000);
+        }
     }
     
     updateSummary();
@@ -363,6 +356,7 @@ async function addTransaction(type) {
     const nameInput = document.getElementById(nameId);
     const amountInput = document.getElementById(amountId);
     const btn = document.querySelector(btnClass);
+    const targetDate = document.getElementById('date').value;
 
     const name = nameInput.value.trim();
     const amount = parseFloat(amountInput.value);
@@ -373,7 +367,7 @@ async function addTransaction(type) {
 
     const payload = {
         user_id: currentUser.id,
-        t_date: document.getElementById('date').value,
+        t_date: targetDate,
         t_type: type,
         party_name: name,
         amount: amount
@@ -387,8 +381,16 @@ async function addTransaction(type) {
         nameInput.value = '';
         amountInput.value = '';
         nameInput.focus();
+        
+        // ১. আজকের ডাটা রিলোড করো
         await loadTodayTransactions();
+        // ২. আজকের ব্যালেন্স অটো সেভ করো
         await autoSaveDayEnd();
+        // ৩. পরের দিন থেকে চেইন সিঙ্ক কল করো
+        const nextDate = new Date(targetDate);
+        nextDate.setDate(nextDate.getDate() + 1);
+        const nextDateStr = nextDate.toISOString().split('T')[0];
+        await recalculateFutureBalances(nextDateStr);
     }
     setButtonLoading(btn, false);
 }
@@ -417,10 +419,27 @@ function renderList() {
 
 async function removeTransaction(id) {
     if(!confirm("Delete this transaction?")) return;
+    
+    const currentDate = document.getElementById('date').value;
+    
+    showProgress(10);
     const { error } = await _supabase.from('transactions').delete().eq('id', id);
+    
     if (!error) {
+        showToast("Deleted! Updating balances...", "info");
+        
+        // ১. আগে আজকের UI আপডেট করো
         await loadTodayTransactions();
         await autoSaveDayEnd();
+        
+        // ২. পরের দিন থেকে চেইন রিঅ্যাকশনে ঠিক করো
+        const nextDate = new Date(currentDate);
+        nextDate.setDate(nextDate.getDate() + 1);
+        const nextDateStr = nextDate.toISOString().split('T')[0];
+        await recalculateFutureBalances(nextDateStr);
+    } else {
+        showToast("Error: " + error.message, "error");
+        hideProgress();
     }
 }
 
@@ -464,16 +483,7 @@ async function autoSaveDayEnd() {
         .upsert(summaryPayload, { onConflict: 'user_id, report_date' });
 }
 
-// Add event listener for manual opening balance change
-const debouncedUpdateSummary = debounce(updateSummary, 300);
-
-window.addEventListener('DOMContentLoaded', () => {
-    const openingInput = document.getElementById('opening');
-    if (openingInput) {
-        openingInput.addEventListener('input', debouncedUpdateSummary);
-    }
-});
-
+// Manual Save Day End function
 async function saveDayEnd() {
     const date = document.getElementById('date').value;
     const opening = parseFloat(document.getElementById('opening').value) || 0;
@@ -504,6 +514,7 @@ async function saveDayEnd() {
     showProgress(50);
 
     try {
+        // ১. প্রথমে আজকের দিন save করো
         const { data, error } = await _supabase.from('daily_accounts')
             .upsert(summaryPayload, { onConflict: 'user_id, report_date' });
 
@@ -514,6 +525,13 @@ async function saveDayEnd() {
             console.log('Saved successfully:', data);
             sendNotification("✅ Saved", "Day End report saved successfully!");
             showToast('✅ Day End Saved Successfully!', 'success');
+            
+            // ২. তারপর পরের দিনগুলো আপডেট করো (আজকের পরের দিন থেকে)
+            const nextDate = new Date(date);
+            nextDate.setDate(nextDate.getDate() + 1);
+            const nextDateStr = nextDate.toISOString().split('T')[0];
+            
+            await recalculateFutureBalances(nextDateStr);
         }
     } catch (err) {
         console.error('Catch error:', err);
@@ -530,6 +548,8 @@ async function saveDayEnd() {
         }
     }
 }
+
+
 
 // --- মালিকের জন্য বিস্তারিত হোয়াটসঅ্যাপ রিপোর্ট ---
 function shareWhatsApp() {
@@ -698,4 +718,88 @@ async function saveCounterHistory() {
 
 function viewCounterHistory() {
     window.location.href = 'counter_history.html';
+}
+
+// --- Ripple Update: Recalculate Future Balances ---
+async function recalculateFutureBalances(startDate) {
+    console.log("Cascading Sync started from:", startDate);
+    showProgress(20);
+
+    try {
+        // ১. বর্তমাদ স্ক্রিনে যে তারিখ ওপেন আছে সেটা সেভ করো
+        const currentScreenDate = document.getElementById('date').value;
+        
+        // ২. স্টার্ট তারিখের আগের দিনের ক্লোজিং ব্যালেন্স বের করা
+        const { data: prevDay } = await _supabase
+            .from('daily_accounts')
+            .select('petty_cash')
+            .eq('user_id', currentUser.id)
+            .lt('report_date', startDate)
+            .order('report_date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        let runningBalance = prevDay ? parseFloat(prevDay.petty_cash) : 0;
+
+        // ৩. ঐ তারিখ থেকে আজ পর্যন্ত সব দিনের রেকর্ড এবং ট্রানজেকশন নিয়ে আসা
+        const { data: allDays } = await _supabase
+            .from('daily_accounts')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .gte('report_date', startDate)
+            .order('report_date', { ascending: true });
+
+        const { data: allTrans } = await _supabase
+            .from('transactions')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .gte('t_date', startDate);
+
+        if (!allDays || allDays.length === 0) {
+            showProgress(100);
+            hideProgress();
+            return;
+        }
+
+        showProgress(50);
+
+        // ৪. লুপ চালিয়ে প্রতিটি দিন আপডেট করা
+        for (const day of allDays) {
+            const currentDate = day.report_date;
+            const dayTrans = allTrans ? allTrans.filter(t => t.t_date === currentDate) : [];
+            const totalIn = dayTrans.filter(t => t.t_type === 'IN').reduce((s, t) => s + t.amount, 0);
+            const totalOut = dayTrans.filter(t => t.t_type === 'OUT').reduce((s, t) => s + t.amount, 0);
+
+            const newOpening = runningBalance;
+            const newClosing = (newOpening + totalIn) - totalOut;
+
+            console.log(`📅 ${currentDate}: Opening=${newOpening}, IN=${totalIn}, OUT=${totalOut}, Closing=${newClosing}`);
+
+            // ডাটাবেসে ঐ দিনের ওপেনিং এবং ক্লোজিং আপডেট করা
+            await _supabase.from('daily_accounts').upsert({
+                user_id: currentUser.id,
+                report_date: currentDate,
+                opening_balance: newOpening,
+                cash_received: totalIn,
+                handover_client: totalOut,
+                petty_cash: newClosing
+            }, { onConflict: 'user_id, report_date' });
+
+            runningBalance = newClosing; // আজকের ক্লোজিং পরের দিনের ওপেনিং হবে
+        }
+
+        console.log("✅ Cascading Sync Completed!");
+        showToast("✅ All future dates updated!", "success");
+        
+        // ৫. সিঙ্ক শেষ হলে বর্তমান স্ক্রিন রিফ্রেশ করো
+        await fetchOpeningBalance();
+        await loadTodayTransactions();
+
+    } catch (err) {
+        console.error("Sync Error:", err);
+        showToast("Error updating balances", "error");
+    } finally {
+        showProgress(100);
+        hideProgress();
+    }
 }

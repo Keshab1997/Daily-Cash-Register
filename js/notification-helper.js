@@ -29,12 +29,11 @@ class PWANotification {
     // Notification পাঠানোর জন্য (Service Worker দিয়ে)
     async send(title, options = {}) {
         if (this.permission !== 'granted') {
-            console.log('Notification permission not granted');
+            // Silent fail - don't log to console
             return false;
         }
 
         if (!('serviceWorker' in navigator)) {
-            console.log('Service Worker not supported');
             return false;
         }
 
@@ -56,7 +55,7 @@ class PWANotification {
             await registration.showNotification(title, notificationOptions);
             return true;
         } catch (error) {
-            console.error('Notification error:', error);
+            // Silent fail
             return false;
         }
     }

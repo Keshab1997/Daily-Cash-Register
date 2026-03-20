@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' https: data:; connect-src 'self' https://*.supabase.co; font-src 'self' https://cdn.jsdelivr.net;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' https: data:; connect-src 'self' https://*.supabase.co; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com;">
 <title>Secret Box - Hisab</title>
 
 <link rel="manifest" href="manifest.json">
@@ -11,6 +11,8 @@
 <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/18062/18062856.png">
 <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/18062/18062856.png">
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 
 <link rel="stylesheet" href="css/base.css">
@@ -19,6 +21,7 @@
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet" media="all">
 </head>
 <body>
+<main>
 <div class="container">
 <div class="navbar">
 <a href="dashboard.html" class="brand">
@@ -125,6 +128,7 @@
         </div>
     </div>
 </div>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="js/config.js" defer></script>
