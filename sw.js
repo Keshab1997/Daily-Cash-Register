@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hisab-manager-v30';
+const CACHE_NAME = 'hisab-manager-v31';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -8,6 +8,7 @@ const ASSETS_TO_CACHE = [
     './box.html',
     './secret_history.html',
     './counter_history.html',
+    './expenses.html',
     './css/base.css',
     './css/login.css',
     './css/navbar.css',
@@ -16,6 +17,7 @@ const ASSETS_TO_CACHE = [
     './css/profile.css',
     './css/box.css',
     './css/secret_history.css',
+    './css/expenses.css',
     './js/config.js',
     './js/auth.js',
     './js/dashboard.js',
@@ -23,6 +25,7 @@ const ASSETS_TO_CACHE = [
     './js/profile.js',
     './js/box.js',
     './js/secret_history.js',
+    './js/expenses.js',
     './js/share-image.js',
     './js/pwa.js',
     'https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css',
@@ -30,7 +33,10 @@ const ASSETS_TO_CACHE = [
     'https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js',
     'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+    'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+    'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'
 ];
 
 self.addEventListener('install', (event) => {
