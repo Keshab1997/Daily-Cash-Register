@@ -15,9 +15,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="preconnect" href="https://unpkg.com" crossorigin>
-    <link rel="dns-prefetch" href="https://assets8.lottiefiles.com">
-    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
     
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/login.css">
@@ -28,15 +25,25 @@
         <div class="login-card">
             
             <div class="illustration-side">
-                <lottie-player 
-                    src="https://assets8.lottiefiles.com/packages/lf20_jcikwtux.json" 
-                    background="transparent" 
-                    speed="1" 
-                    style="width: 100%; height: 300px;" 
-                    loop 
-                    autoplay
-                    loading="lazy">
-                </lottie-player>
+                <div class="floating-illustration">
+                    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="100" cy="100" r="80" fill="url(#grad1)" opacity="0.1"/>
+                        <circle cx="100" cy="100" r="60" fill="url(#grad1)" opacity="0.2"/>
+                        <g transform="translate(50, 50)">
+                            <path d="M50 10 L90 30 L90 70 L50 90 L10 70 L10 30 Z" fill="url(#grad1)" opacity="0.8"/>
+                            <circle cx="50" cy="35" r="8" fill="white"/>
+                            <rect x="35" y="50" width="30" height="3" rx="1.5" fill="white"/>
+                            <rect x="35" y="58" width="20" height="3" rx="1.5" fill="white"/>
+                            <rect x="35" y="66" width="25" height="3" rx="1.5" fill="white"/>
+                        </g>
+                    </svg>
+                </div>
                 <h2>Daily Hisab</h2>
                 <p>Manage your daily cash flow easily</p>
             </div>
@@ -112,7 +119,6 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js" defer></script>
     <script src="js/config.js" defer></script>
     <script src="js/pwa.js" defer></script>
     <script src="js/auth.js" defer></script>
