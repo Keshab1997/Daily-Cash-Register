@@ -187,6 +187,22 @@ const itemCategoryMap = {
     'ওয়াইফাই': 'Mobile/Internet', 'ডাটা': 'Mobile/Internet'
 };
 
+function switchTab(tabId, event) {
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    document.getElementById(tabId).classList.add('active');
+    
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
+}
+
 function showToast(msg, type = 'info') {
     const colors = { success: '#10b981', error: '#ef4444', info: '#3b82f6' };
     const toast = document.createElement('div');
@@ -284,13 +300,27 @@ async function addExpense() {
     const cat = document.getElementById('expCat').value.trim();
     const amount = parseFloat(document.getElementById('expAmount').value);
 
-    if (!rawItem || !cat || !amount || amount <= 0) {
-        showToast('Please fill all fields!', 'error');
+    if (!date || !rawItem || !cat || isNaN(amount) || amount <= 0) {
+        showToast('Please fill all fields correctly!', 'error');
         return;
     }
 
     const item = autoCorrectItemName(rawItem);
     const normalizedCat = await normalizeCategoryName(cat);
+
+    // Duplicate check
+    const { data: existing } = await _supabase
+        .from('personal_expenses')
+        .select('id')
+        .eq('user_id', currentUser.id)
+        .eq('e_date', date)
+        .eq('item_name', item)
+        .eq('amount', amount)
+        .maybeSingle();
+
+    if (existing) {
+        if (!confirm('⚠️ This entry already exists! Add again?')) return;
+    }
 
     const btn = document.querySelector('.btn-save-new');
     btn.disabled = true;
@@ -307,20 +337,91 @@ async function addExpense() {
     if (error) {
         showToast('Error: ' + error.message, 'error');
     } else {
-        document.getElementById('expItem').value = '';
-        document.getElementById('expCat').value = '';
-        document.getElementById('expAmount').value = '';
-        document.getElementById('expItem').focus();
-        categoryLocked = true;
-        document.getElementById('expCat').readOnly = true;
-        document.getElementById('expCat').style.background = '#f8fafc';
-        document.getElementById('catLockIcon').className = 'ri-lock-unlock-line';
+        resetForm();
         showToast('✅ Expense added!', 'success');
         loadExpenses();
     }
 
     btn.disabled = false;
     btn.innerHTML = '<i class="ri-save-line"></i> Save';
+}
+
+function editExpense(id) {
+    const item = allExpenses.find(ex => ex.id === id);
+    if (!item) return;
+
+    document.getElementById('editId').value = item.id;
+    document.getElementById('expDate').value = item.e_date;
+    document.getElementById('expItem').value = item.item_name;
+    document.getElementById('expAmount').value = item.amount;
+
+    // Unlock category and set value
+    categoryLocked = false;
+    const catInput = document.getElementById('expCat');
+    catInput.readOnly = false;
+    catInput.style.background = 'white';
+    catInput.value = item.category || '';
+    document.getElementById('catLockIcon').className = 'ri-lock-line';
+
+    const btn = document.querySelector('.btn-save-new');
+    btn.innerHTML = '<i class="ri-refresh-line"></i> Update Expense';
+    btn.style.background = '#f59e0b';
+    btn.onclick = updateExpense;
+
+    // Switch to Add tab and scroll to form
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-add').classList.add('active');
+    document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    document.querySelector('.card-expense').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function updateExpense() {
+    const id = document.getElementById('editId').value;
+    const date = document.getElementById('expDate').value;
+    const rawItem = document.getElementById('expItem').value.trim();
+    const cat = document.getElementById('expCat').value.trim();
+    const amount = parseFloat(document.getElementById('expAmount').value);
+
+    if (!date || !rawItem || !cat || isNaN(amount) || amount <= 0) {
+        showToast('Please fill all fields correctly!', 'error');
+        return;
+    }
+
+    const btn = document.querySelector('.btn-save-new');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i> Updating...';
+
+    const { error } = await _supabase
+        .from('personal_expenses')
+        .update({ e_date: date, item_name: autoCorrectItemName(rawItem), category: cat, amount })
+        .eq('id', id);
+
+    if (error) {
+        showToast('Error: ' + error.message, 'error');
+    } else {
+        showToast('✅ Updated!', 'success');
+        resetForm();
+        loadExpenses();
+    }
+
+    btn.disabled = false;
+}
+
+function resetForm() {
+    document.getElementById('editId').value = '';
+    document.getElementById('expItem').value = '';
+    document.getElementById('expCat').value = '';
+    document.getElementById('expAmount').value = '';
+    document.getElementById('expItem').focus();
+    categoryLocked = true;
+    document.getElementById('expCat').readOnly = true;
+    document.getElementById('expCat').style.background = '#f8fafc';
+    document.getElementById('catLockIcon').className = 'ri-lock-unlock-line';
+    const btn = document.querySelector('.btn-save-new');
+    btn.innerHTML = '<i class="ri-save-line"></i> Save';
+    btn.style.background = '';
+    btn.onclick = addExpense;
 }
 
 async function normalizeCategoryName(input) {
@@ -397,6 +498,8 @@ function autoCorrectItemName(input) {
     ).join(' ');
 }
 
+let listLimit = 10;
+
 async function loadExpenses() {
     const { data, error } = await _supabase.from('personal_expenses')
         .select('*')
@@ -406,6 +509,7 @@ async function loadExpenses() {
 
     if (!error) {
         allExpenses = data || [];
+        listLimit = 10;
         applyPivotFilter();
         renderUI(allExpenses);
         loadFrequentItems();
@@ -539,41 +643,53 @@ function renderUI(data) {
     const currentYear = new Date().getFullYear();
 
     let todayTotal = 0, monthTotal = 0;
-
-    list.innerHTML = '';
-    
-    if (data.length === 0) {
-        list.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">No expenses found</div>';
-    }
-
     data.forEach(ex => {
         const exDate = new Date(ex.e_date);
         if (ex.e_date === today) todayTotal += parseFloat(ex.amount);
-        if (exDate.getMonth() === currentMonth && exDate.getFullYear() === currentYear) {
+        if (exDate.getMonth() === currentMonth && exDate.getFullYear() === currentYear)
             monthTotal += parseFloat(ex.amount);
-        }
+    });
+    document.getElementById('todayExp').innerText = '₹' + todayTotal.toLocaleString('en-IN');
+    document.getElementById('monthExp').innerText = '₹' + monthTotal.toLocaleString('en-IN');
 
+    list.innerHTML = '';
+
+    if (data.length === 0) {
+        list.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">No expenses found</div>';
+        return;
+    }
+
+    data.slice(0, listLimit).forEach(ex => {
         const category = ex.category || '💼 Others';
-
+        const catIcon = category.match(/^(\S+)/)?.[1] || '💼';
         list.innerHTML += `
             <div class="exp-item-new">
+                <div class="cat-icon-circle">${catIcon}</div>
                 <div class="exp-info">
-                    <div>
-                        <span class="exp-name">${ex.item_name}</span>
-                        <span class="cat-badge">${category}</span>
-                    </div>
-                    <span class="exp-date"><i class="ri-calendar-line"></i> ${ex.e_date}</span>
+                    <span class="exp-name">${ex.item_name}</span>
+                    <span class="exp-date">${ex.e_date} · <span class="cat-badge">${category.replace(/^\S+\s*/, '')}</span></span>
                 </div>
-                <div style="display:flex; align-items:center; gap:15px;">
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
                     <span class="exp-amt">₹${parseFloat(ex.amount).toLocaleString('en-IN')}</span>
-                    <i class="ri-delete-bin-line btn-del-mini" onclick="deleteExpense(${ex.id})"></i>
+                    <div style="display:flex; gap:8px;">
+                        <i class="ri-edit-box-line btn-edit-mini" onclick="editExpense(${ex.id})" title="Edit"></i>
+                        <i class="ri-delete-bin-line btn-del-mini" onclick="deleteExpense(${ex.id})" title="Delete"></i>
+                    </div>
                 </div>
             </div>
         `;
     });
 
-    document.getElementById('todayExp').innerText = '₹' + todayTotal.toLocaleString('en-IN');
-    document.getElementById('monthExp').innerText = '₹' + monthTotal.toLocaleString('en-IN');
+    if (data.length > listLimit) {
+        list.innerHTML += `<button class="btn-load-more" onclick="loadMore()"><i class="ri-arrow-down-s-line"></i> Load More <span style="opacity:0.7;font-size:0.8em;">(${data.length - listLimit} remaining)</span></button>`;
+    } else if (data.length > 10) {
+        list.innerHTML += `<p class="list-end-note">✓ All ${data.length} expenses shown</p>`;
+    }
+}
+
+function loadMore() {
+    listLimit += 10;
+    renderUI(allExpenses);
 }
 
 async function deleteExpense(id) {
@@ -602,143 +718,142 @@ function downloadPivotPDF() {
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
 
-    // --- Header Section ---
-    doc.setFillColor(99, 102, 241);
-    doc.rect(0, 0, pageWidth, 35, 'F');
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.setFont("helvetica", "bold");
-    doc.text("EXPENSE TRACKER PRO", pageWidth / 2, 18, { align: "center" });
-
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text("Category-wise Pivot Report", pageWidth / 2, 26, { align: "center" });
-
-    // --- Summary Section ---
-    doc.setTextColor(71, 85, 105);
-    doc.setFontSize(11);
     const periodSelect = document.getElementById('pivotPeriod');
     const periodText = periodSelect.options[periodSelect.selectedIndex].text;
-    
-    doc.text(`Period: ${periodText}`, 14, 45);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 51);
+
+    pdfHeader(doc, 'EXPENSE TRACKER PRO', 'Category-wise Pivot Report', pageWidth);
 
     let grandTotal = 0;
-    const pivotTableData = [];
-    
-    Object.keys(pivotData).sort().forEach(cat => {
-        const data = pivotData[cat];
-        const cleanCat = cat.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-        pivotTableData.push([
-            cleanCat, 
-            data.count, 
-            'Rs ' + parseFloat(data.total).toLocaleString('en-IN', {minimumFractionDigits: 2})
-        ]);
-        grandTotal += data.total;
-    });
+    Object.values(pivotData).forEach(d => { grandTotal += d.total; });
+    const catCount = Object.keys(pivotData).length;
 
-    doc.setFont("helvetica", "bold");
-    doc.text(`Total Expenses: Rs. ${grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`, pageWidth - 14, 45, { align: "right" });
-    doc.text(`Total Items: ${filteredExpenses.length}`, pageWidth - 14, 51, { align: "right" });
+    // --- Stat Cards ---
+    // Card 1 — Period
+    doc.setFillColor(238, 242, 255);
+    doc.roundedRect(14, 43, 57, 18, 3, 3, 'F');
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100, 116, 139);
+    doc.text('PERIOD', 17, 50);
+    doc.setFontSize(11);
+    doc.setTextColor(79, 70, 229);
+    doc.text(periodText, 17, 58);
 
-    // --- Main Summary Table ---
-    doc.autoTable({
-        startY: 58,
-        head: [['Category', 'No. of Items', 'Total Amount']],
-        body: pivotTableData,
-        theme: 'striped',
-        headStyles: { fillColor: [71, 85, 105], textColor: 255, fontStyle: 'bold', fontSize: 11 },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        bodyStyles: { fontSize: 10 },
-        columnStyles: {
-            0: { halign: 'left', cellWidth: 80 },
-            1: { halign: 'center', cellWidth: 35 },
-            2: { halign: 'right', cellWidth: 60, fontStyle: 'bold' }
-        },
-        didParseCell: function (data) {
-            if (data.section === 'head' || data.section === 'foot') {
-                if (data.column.index === 0) data.cell.styles.halign = 'left';
-                if (data.column.index === 1) data.cell.styles.halign = 'center';
-                if (data.column.index === 2) data.cell.styles.halign = 'right';
-            }
-        },
-        foot: [['GRAND TOTAL', filteredExpenses.length, 'Rs ' + grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})]],
-        footStyles: { fillColor: [226, 232, 240], textColor: [99, 102, 241], fontStyle: 'bold', fontSize: 11 },
-        didDrawPage: function (data) {
-            doc.setFontSize(8);
-            doc.setTextColor(150);
-            doc.text(`Page ${doc.internal.getNumberOfPages()}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
-        }
-    });
+    // Card 2 — Grand Total
+    doc.setFillColor(238, 242, 255);
+    doc.roundedRect(76, 43, 57, 18, 3, 3, 'F');
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100, 116, 139);
+    doc.text('GRAND TOTAL', 79, 50);
+    doc.setFontSize(11);
+    doc.setTextColor(79, 70, 229);
+    doc.text('Rs. ' + grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 }), 79, 58);
 
-    // --- Detailed Breakdown Section ---
-    let detailStartY = doc.lastAutoTable.finalY + 15;
-    
-    doc.setFontSize(14);
-    doc.setTextColor(50, 50, 50);
-    doc.setFont("helvetica", "bold");
-    doc.text("Detailed Breakdown by Category", 14, detailStartY);
-    detailStartY += 8;
+    // Card 3 — Categories
+    doc.setFillColor(238, 242, 255);
+    doc.roundedRect(138, 43, 57, 18, 3, 3, 'F');
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100, 116, 139);
+    doc.text('CATEGORIES', 141, 50);
+    doc.setFontSize(13);
+    doc.setTextColor(79, 70, 229);
+    doc.text(`${catCount} (${filteredExpenses.length} items)`, 141, 58);
 
-    Object.keys(pivotData).sort().forEach(cat => {
-        const data = pivotData[cat];
-        const cleanCat = cat.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-        
-        // Check if we need a new page to avoid cutting off
-        if (detailStartY > pageHeight - 40) {
-            doc.addPage();
-            detailStartY = 20;
-        }
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(148, 163, 184);
+    doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 14, 68);
 
-        doc.setFontSize(11);
-        doc.setTextColor(99, 102, 241);
-        doc.setFont("helvetica", "bold");
-        doc.text(`${cleanCat} - Rs. ${data.total.toLocaleString('en-IN', {minimumFractionDigits: 2})}`, 14, detailStartY);
-        
-        const itemsData = data.items.map(item => [
-            item.date,
-            item.item,
-            'Rs ' + parseFloat(item.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})
-        ]);
-        
-        doc.autoTable({
-            startY: detailStartY + 4,
-            head: [['Date', 'Item', 'Amount']],
-            body: itemsData,
-            theme: 'plain',
-            headStyles: { fillColor: [241, 245, 249], textColor: [71, 85, 105], fontSize: 10, fontStyle: 'bold' },
-            bodyStyles: { fontSize: 10, textColor: [71, 85, 105] },
-            alternateRowStyles: { fillColor: [250, 250, 250] },
-            columnStyles: {
-                0: { cellWidth: 28, halign: 'center' },
-                1: { halign: 'left', cellWidth: 95 },
-                2: { cellWidth: 45, halign: 'right', fontStyle: 'bold' }
-            },
-            didParseCell: function (data) {
-                if (data.section === 'head' || data.section === 'foot') {
-                    if (data.column.index === 0) data.cell.styles.halign = 'center';
-                    if (data.column.index === 1) data.cell.styles.halign = 'left';
-                    if (data.column.index === 2) data.cell.styles.halign = 'right';
-                }
-            },
-            margin: { left: 14, right: 14 },
-            didDrawPage: function (data) {
-                doc.setFontSize(8);
-                doc.setTextColor(150);
-                doc.text(`Page ${doc.internal.getNumberOfPages()}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
-            }
+    // Summary pivot table
+    const pivotTableData = Object.entries(pivotData)
+        .sort((a, b) => b[1].total - a[1].total)
+        .map(([cat, data]) => {
+            const pct = ((data.total / grandTotal) * 100).toFixed(1);
+            return [
+                cleanForPDF(cat),
+                data.count,
+                'Rs ' + data.total.toLocaleString('en-IN', { minimumFractionDigits: 2 }),
+                pct + '%'
+            ];
         });
-        
-        detailStartY = doc.lastAutoTable.finalY + 12;
+
+    doc.autoTable({
+        startY: 72,
+        head: [['Category', 'Items', 'Total Amount', '% Share']],
+        body: pivotTableData,
+        theme: 'grid',
+        headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold', fontSize: 10, cellPadding: 5 },
+        bodyStyles: { textColor: [30, 41, 59], fontSize: 9.5, cellPadding: 4 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: {
+            0: { halign: 'left', cellWidth: 70 },
+            1: { halign: 'center', cellWidth: 20 },
+            2: { halign: 'right', cellWidth: 60, fontStyle: 'bold', textColor: [79, 70, 229] },
+            3: { halign: 'center', cellWidth: 30 }
+        },
+        foot: [['GRAND TOTAL', filteredExpenses.length, 'Rs ' + grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 }), '100%']],
+        footStyles: { fillColor: [241, 245, 249], textColor: [79, 70, 229], fontStyle: 'bold', fontSize: 10 },
+        margin: { bottom: 18 }
     });
 
-    // Preview in new tab
-    const pdfBlob = doc.output('blob');
-    const pdfUrl = URL.createObjectURL(pdfBlob);
-    window.open(pdfUrl, '_blank');
-    
-    showToast('✅ PDF preview opened!', 'success');
+    // Detailed breakdown
+    let y = doc.lastAutoTable.finalY + 12;
+
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 41, 59);
+    if (y > pageHeight - 50) { doc.addPage(); y = 20; }
+    doc.text('Detailed Breakdown by Category', 14, y);
+    y += 6;
+
+    Object.entries(pivotData)
+        .sort((a, b) => b[1].total - a[1].total)
+        .forEach(([cat, data]) => {
+            if (y > pageHeight - 45) { doc.addPage(); y = 20; }
+
+            // Category label bar
+            doc.setFillColor(238, 242, 255);
+            doc.roundedRect(14, y, pageWidth - 28, 9, 2, 2, 'F');
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(79, 70, 229);
+            doc.text(
+                `${cleanForPDF(cat)}  —  Rs. ${data.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}  (${data.count} items)`,
+                18, y + 6.5
+            );
+            y += 11;
+
+            const itemsData = data.items.map(item => [
+                item.date,
+                cleanForPDF(item.item),
+                'Rs ' + item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })
+            ]);
+
+            doc.autoTable({
+                startY: y,
+                head: [['Date', 'Item', 'Amount']],
+                body: itemsData,
+                theme: 'plain',
+                headStyles: { fillColor: [241, 245, 249], textColor: [71, 85, 105], fontSize: 9, fontStyle: 'bold', cellPadding: 3 },
+                bodyStyles: { fontSize: 9, textColor: [71, 85, 105], cellPadding: 3 },
+                alternateRowStyles: { fillColor: [252, 252, 253] },
+                columnStyles: {
+                    0: { cellWidth: 28, halign: 'center' },
+                    1: { halign: 'left' },
+                    2: { cellWidth: 42, halign: 'right', fontStyle: 'bold' }
+                },
+                margin: { left: 14, right: 14, bottom: 18 }
+            });
+
+            y = doc.lastAutoTable.finalY + 10;
+        });
+
+    pdfFooter(doc, pageWidth, pageHeight);
+
+    window.open(URL.createObjectURL(doc.output('blob')), '_blank');
+    showToast('✅ PDF opened!', 'success');
 }
 
 // ============ CHART VISUALIZATION ============
@@ -893,6 +1008,100 @@ function renderCharts() {
     });
 }
 
+// ============ PDF HELPERS ============
+const bnToEnMap = {
+    'বাজার':'Groceries','ব্যক্তিগত':'Personal','দোকান':'Shop',
+    'বিল':'Bills','ট্যাক্স':'Tax','যাতায়াত':'Transport',
+    'শিক্ষা':'Education','পড়াশোনা':'Education','ভাড়া':'Rent',
+    'চিকিৎসা':'Medical','ওষুধ':'Medicine','খাবার':'Food',
+    'মোবাইল':'Mobile','ইন্টারনেট':'Internet','কাপড়':'Clothing',
+    'পোশাক':'Clothing','মনোরঞ্জন':'Entertainment','বিনোদন':'Entertainment',
+    'অন্যান্য':'Others','চাল':'Rice','আটা':'Flour','ডাল':'Lentil',
+    'তেল':'Oil','চিনি':'Sugar','লবণ':'Salt','মসলা':'Spice',
+    'সবজি':'Vegetable','ফল':'Fruit','দুধ':'Milk','ডিম':'Egg',
+    'মাছ':'Fish','মাংস':'Meat','চা':'Tea','কফি':'Coffee',
+    'নাস্তা':'Breakfast','বিরিয়ানি':'Biryani','পেট্রোল':'Petrol',
+    'ডিজেল':'Diesel','বাস':'Bus','ট্রেন':'Train','ট্যাক্সি':'Taxi',
+    'রিকশা':'Rickshaw','মেট্রো':'Metro','বিদ্যুৎ':'Electricity',
+    'পানি':'Water','গ্যাস':'Gas','রিচার্জ':'Recharge','বিমা':'Insurance',
+    'ট্যাবলেট':'Tablet','ডাক্তার':'Doctor','হাসপাতাল':'Hospital',
+    'ক্লিনিক':'Clinic','পরীক্ষা':'Test','চেকআপ':'Checkup',
+    'বই':'Book','খাতা':'Notebook','কলম':'Pen','স্কুল':'School',
+    'কলেজ':'College','টিউশন':'Tuition','ফি':'Fee',
+    'শার্ট':'Shirt','প্যান্ট':'Pant','জুতা':'Shoe','শাড়ি':'Saree',
+    'কুর্তা':'Kurta','জিন্স':'Jeans','সিনেমা':'Cinema',
+    'টিকিট':'Ticket','খেলা':'Game','উপহার':'Gift','পার্টি':'Party',
+    'সেলুন':'Salon','সাবান':'Soap','শ্যাম্পু':'Shampoo',
+    'টুথপেস্ট':'Toothpaste','বাড়ি ভাড়া':'House Rent',
+    'ওয়াইফাই':'WiFi','ডাটা':'Data'
+};
+
+function cleanForPDF(text) {
+    if (!text) return 'N/A';
+    let result = text;
+    // Replace known Bengali words with English
+    for (const [bn, en] of Object.entries(bnToEnMap)) {
+        result = result.replace(new RegExp(bn, 'g'), en);
+    }
+    // Remove emoji and other non-printable unicode but keep ASCII + common punctuation
+    result = result.replace(/[^\x20-\x7E]/g, '').trim();
+    // If nothing left (was pure Bengali with no mapping), transliterate remaining chars
+    return result || text.replace(/[^\x20-\x7E]/g, '?').trim() || 'N/A';
+}
+
+function pdfHeader(doc, title, subtitle, pageWidth) {
+    // Gradient-like header using two rects
+    doc.setFillColor(79, 70, 229);
+    doc.rect(0, 0, pageWidth, 38, 'F');
+    doc.setFillColor(99, 91, 255);
+    doc.rect(0, 30, pageWidth, 8, 'F');
+
+    // Decorative circles
+    doc.setFillColor(255, 255, 255, 0.05);
+    doc.circle(pageWidth - 20, 5, 18, 'F');
+    doc.circle(15, 35, 10, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.text(title, pageWidth / 2, 16, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(subtitle, pageWidth / 2, 25, { align: 'center' });
+}
+
+function pdfFooter(doc, pageWidth, pageHeight) {
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFillColor(248, 250, 252);
+        doc.rect(0, pageHeight - 14, pageWidth, 14, 'F');
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text('Expense Tracker Pro', 14, pageHeight - 5);
+        doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+        doc.text(new Date().toLocaleDateString('en-IN'), pageWidth - 14, pageHeight - 5, { align: 'right' });
+    }
+}
+
+function pdfSummaryBar(doc, leftLabel, leftVal, rightLabel, rightVal, pageWidth, y) {
+    doc.setFillColor(241, 245, 249);
+    doc.roundedRect(14, y, pageWidth - 28, 16, 3, 3, 'F');
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text(leftLabel, 20, y + 7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(79, 70, 229);
+    doc.text(leftVal, 20, y + 13);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text(rightLabel, pageWidth - 20, y + 7, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(79, 70, 229);
+    doc.text(rightVal, pageWidth - 20, y + 13, { align: 'right' });
+}
+
 function downloadPDF() {
     if (allExpenses.length === 0) {
         showToast('No expenses!', 'error');
@@ -904,81 +1113,89 @@ function downloadPDF() {
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
 
-    // --- Header Section ---
-    doc.setFillColor(99, 102, 241);
-    doc.rect(0, 0, pageWidth, 35, 'F');
+    pdfHeader(doc, 'EXPENSE TRACKER PRO', 'Detailed Expense Report', pageWidth);
 
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.setFont("helvetica", "bold");
-    doc.text("EXPENSE TRACKER PRO", pageWidth / 2, 18, { align: "center" });
-
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text("Detailed Expense Report", pageWidth / 2, 26, { align: "center" });
-
-    // --- Summary Section ---
-    doc.setTextColor(71, 85, 105);
-    doc.setFontSize(11);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 45);
-
+    // --- Stat Cards ---
+    const todayTotal = document.getElementById('todayExp').innerText;
+    const monthTotal = document.getElementById('monthExp').innerText;
     const totalAmount = allExpenses.reduce((sum, ex) => sum + parseFloat(ex.amount), 0);
-    doc.setFont("helvetica", "bold");
-    doc.text(`Total Expenses: Rs. ${totalAmount.toLocaleString('en-IN', {minimumFractionDigits: 2})}`, pageWidth - 14, 45, { align: "right" });
-    doc.text(`Total Items: ${allExpenses.length}`, pageWidth - 14, 51, { align: "right" });
 
-    // --- Table Data Preparation ---
-    const tableData = allExpenses.map(ex => {
-        const cleanCat = ex.category ? ex.category.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim() : 'N/A';
-        return [
-            ex.e_date,
-            ex.item_name,
-            cleanCat,
-            'Rs ' + parseFloat(ex.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})
-        ];
-    });
+    // Card 1 — Today
+    doc.setFillColor(238, 242, 255);
+    doc.roundedRect(14, 43, 57, 18, 3, 3, 'F');
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100, 116, 139);
+    doc.text("TODAY'S TOTAL", 17, 50);
+    doc.setFontSize(13);
+    doc.setTextColor(79, 70, 229);
+    doc.text(todayTotal, 17, 58);
 
-    // --- Table Styling ---
+    // Card 2 — Month
+    doc.setFillColor(238, 242, 255);
+    doc.roundedRect(76, 43, 57, 18, 3, 3, 'F');
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100, 116, 139);
+    doc.text('MONTHLY TOTAL', 79, 50);
+    doc.setFontSize(13);
+    doc.setTextColor(79, 70, 229);
+    doc.text(monthTotal, 79, 58);
+
+    // Card 3 — Items count
+    doc.setFillColor(238, 242, 255);
+    doc.roundedRect(138, 43, 57, 18, 3, 3, 'F');
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100, 116, 139);
+    doc.text('TOTAL ITEMS', 141, 50);
+    doc.setFontSize(13);
+    doc.setTextColor(79, 70, 229);
+    doc.text(String(allExpenses.length), 141, 58);
+
+    // --- Generated on line ---
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(148, 163, 184);
+    doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 14, 68);
+
+    const tableData = allExpenses.map(ex => [
+        ex.e_date,
+        cleanForPDF(ex.item_name),
+        cleanForPDF(ex.category),
+        'Rs ' + parseFloat(ex.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })
+    ]);
+
     doc.autoTable({
-        startY: 58,
+        startY: 72,
         head: [['Date', 'Item Description', 'Category', 'Amount']],
         body: tableData,
-        theme: 'striped',
-        headStyles: { 
-            fillColor: [99, 102, 241], 
-            textColor: 255, 
+        theme: 'grid',
+        headStyles: {
+            fillColor: [79, 70, 229],
+            textColor: 255,
             fontStyle: 'bold',
-            fontSize: 11
+            fontSize: 10,
+            cellPadding: 5
         },
-        bodyStyles: { textColor: [50, 50, 50], fontSize: 10 },
+        bodyStyles: { textColor: [30, 41, 59], fontSize: 9.5, cellPadding: 4 },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         columnStyles: {
-            0: { halign: 'center', cellWidth: 28 },
-            1: { halign: 'left', cellWidth: 70 },
-            2: { halign: 'center', cellWidth: 45 },
-            3: { halign: 'right', cellWidth: 40, fontStyle: 'bold', textColor: [99, 102, 241] }
+            0: { halign: 'center', cellWidth: 26 },
+            1: { halign: 'left', cellWidth: 72 },
+            2: { halign: 'center', cellWidth: 44 },
+            3: { halign: 'right', cellWidth: 38, fontStyle: 'bold', textColor: [79, 70, 229] }
         },
-        didParseCell: function (data) {
-            if (data.section === 'head' || data.section === 'foot') {
-                if (data.column.index === 0) data.cell.styles.halign = 'center';
-                if (data.column.index === 1) data.cell.styles.halign = 'left';
-                if (data.column.index === 2) data.cell.styles.halign = 'center';
-                if (data.column.index === 3) data.cell.styles.halign = 'right';
-            }
-        },
-        didDrawPage: function (data) {
-            doc.setFontSize(8);
-            doc.setTextColor(150);
-            doc.text(`Page ${doc.internal.getNumberOfPages()}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
-        }
+        foot: [['', `Total: ${allExpenses.length} items`, '', 'Rs ' + totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })]],
+        footStyles: { fillColor: [241, 245, 249], textColor: [79, 70, 229], fontStyle: 'bold', fontSize: 10 },
+        margin: { bottom: 18 }
     });
 
-    // Preview in new tab
+    pdfFooter(doc, pageWidth, pageHeight);
+
     const pdfBlob = doc.output('blob');
-    const pdfUrl = URL.createObjectURL(pdfBlob);
-    window.open(pdfUrl, '_blank');
-    
-    showToast('✅ PDF preview opened!', 'success');
+    window.open(URL.createObjectURL(pdfBlob), '_blank');
+    showToast('✅ PDF opened!', 'success');
 }
 
 // ============ CATEGORY MANAGER ============
