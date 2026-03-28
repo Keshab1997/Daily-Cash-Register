@@ -3,7 +3,6 @@ let allExpenses = [];
 let filteredExpenses = [];
 let pivotData = {};
 let userCategories = [];
-let itemSuggestions = [];
 let currentEditingCategory = null;
 let categoryLocked = true;
 let newCategoryIcon = '📌';
@@ -226,14 +225,7 @@ window.onload = async () => {
     await initializeCategories();
     loadExpenses();
     loadFrequentItems();
-    requestMicrophonePermission();
 };
-
-function requestMicrophonePermission() {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        // Permission will be requested when user clicks voice button
-    }
-}
 
 async function initializeCategories() {
     const { data: existing } = await _supabase
@@ -1082,24 +1074,6 @@ function pdfFooter(doc, pageWidth, pageHeight) {
         doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
         doc.text(new Date().toLocaleDateString('en-IN'), pageWidth - 14, pageHeight - 5, { align: 'right' });
     }
-}
-
-function pdfSummaryBar(doc, leftLabel, leftVal, rightLabel, rightVal, pageWidth, y) {
-    doc.setFillColor(241, 245, 249);
-    doc.roundedRect(14, y, pageWidth - 28, 16, 3, 3, 'F');
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 116, 139);
-    doc.text(leftLabel, 20, y + 7);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(79, 70, 229);
-    doc.text(leftVal, 20, y + 13);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 116, 139);
-    doc.text(rightLabel, pageWidth - 20, y + 7, { align: 'right' });
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(79, 70, 229);
-    doc.text(rightVal, pageWidth - 20, y + 13, { align: 'right' });
 }
 
 function downloadPDF() {

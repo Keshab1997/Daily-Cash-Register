@@ -539,10 +539,6 @@ body {
         align-items: center;
     }
     
-    .exp-name {
-        font-size: 0.85rem;
-    }
-    
     .exp-amt {
         font-size: 0.95rem;
     }
@@ -621,19 +617,9 @@ body {
         padding: 4px;
     }
     
-    /* Mobile stat boxes */
-    .stat-box-new {
-        padding: 12px;
-    }
-    
     /* Mobile section header */
     .section-header h3 {
         font-size: 0.9rem;
-    }
-    
-    .btn-pdf {
-        padding: 8px 12px;
-        font-size: 0.8rem;
     }
     
     /* Mobile pivot header */
